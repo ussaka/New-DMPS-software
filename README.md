@@ -7,6 +7,7 @@
 - Airmodus PSM+A20
 - Airmodus new model (A30?)
 - Analog electrometers
+- Also detector status should be saved
 
 **DMA's**
 - Vienna different lengths
@@ -20,7 +21,7 @@
 - Flow, T and PSM
 
 **Analog signals**
-- dP (flow), T, P, RH
+- dP (flow), T, P, RH, HV monitor
 
 **Stepping voltage and continous voltage scan (DMPS and SMPS)**
 
