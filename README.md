@@ -18,7 +18,7 @@
 - Both analog control and pwm using TSI flow meter
 
 **TSI flow meter**
-- Flow, T and PSM
+- Flow, T and P
 
 **Analog signals**
 - dP (flow), T, P, RH, HV monitor
