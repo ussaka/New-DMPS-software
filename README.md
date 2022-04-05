@@ -7,7 +7,19 @@
 - Airmodus PSM+A20
 - Airmodus new model (A30?)
 - Analog electrometers
+
 **DMA's**
 - Vienna different lengths
 - HalfMini
 - TSI nano and long
+
+**Blowers**
+- Both analog control and pwm using TSI flow meter
+
+**TSI flow meter**
+- Flow, T and PSM
+
+**Analog signals**
+- dP (flow), T, P, RH
+
+
