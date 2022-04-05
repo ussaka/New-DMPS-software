@@ -1,6 +1,6 @@
 # New DMPS software
 
-#Detectors
+**Detectors**
 
 - TSI CPCs, both old and new serial, pulse and TCP connections
 - TSI electrometer
