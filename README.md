@@ -22,4 +22,12 @@
 **Analog signals**
 - dP (flow), T, P, RH
 
+**Stepping voltage and continous voltage scan (DMPS and SMPS)**
+
+**Inversion**
+- Python inversion by Anton as module or stand alone old Fortran code from PasiA
+
+**DAQ by NI**
+
+
 
