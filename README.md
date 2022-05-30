@@ -75,5 +75,8 @@ General
 - Short meetings every week 
 - Summer holidays around mid summer and in July. Project should be in a good progress before that.
 
+**NOTES**
+Week 22: Pasi goes through the scripts shortly with Kasperi. Hannu has done a very simple GUI. Kasperi has also started with the user interface. 
+
 
 
