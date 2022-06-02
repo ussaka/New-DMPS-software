@@ -48,7 +48,7 @@ General
 - Should have also a 'service mode' which allows to change the parameters from GUI. Service mode should show both the raw and the scaled values.
 
 **Graphical user interface**
-- TKINTER? (not sure of the name)
+- TKINTER
 - Separate result pictures (matplotlib)
 
 **DAQ by NI**
@@ -67,7 +67,7 @@ General
 - Hannu supervises Kasperi with hardware
 
 **HOW TO START WITH PYTHON**
-- Separate Python environment (how to do?)
+- Separate Python environment (how to do?) --> OK (venv)
 - Measurement mode, service mode, configuration mode
 
 **SCHEDULE**
