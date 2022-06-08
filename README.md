@@ -75,8 +75,13 @@ General
 - Short meetings every week 
 - Summer holidays around mid summer and in July. Project should be in a good progress before that.
 
-**NOTES**
-Week 22: Pasi goes through the scripts shortly with Kasperi. Hannu has done a very simple GUI. Kasperi has also started with the user interface. 
+**Nice to have features**
+- Check updates from Gitlab automatically
+
+**Installation**
+- Tested to work with Python version 3.9.7
+- Install required depencies:
+- python -m pip install -r requirements.txt
 
 
 
