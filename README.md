@@ -115,7 +115,7 @@
 **Requirements**
 - Python 3.x.x
 - Tested to work with Python version 3.9.7
-- NI-DAQmx or NI-DAQmx Runtime :grey_question:
+- :grey_question: (NI-DAQmx or NI-DAQmx Runtime)
 
 **Installation**
 - Open any terminal program(cmd) and download the repository with `git clone https://version.helsinki.fi/atm-tech/new-dmps-software.git` you might need credentials for that.
