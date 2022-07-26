@@ -4,7 +4,7 @@
 - Basic working principle for all setups is similar. Parameters are different and for example HalfMini uses probably different kind of blower. UFDMPS has two DMAs and two CPCs.<br /><br />
 - :heavy_check_mark: = Feature is done
 - :x: = Feature is not yet implemented
-- :grey_question: = Not sure
+- :grey_question: = Not sure if the feature is needed or is implemented
 
 **Detectors**
 - :heavy_check_mark: TSI CPCs old legacy serial and pulse connection
@@ -115,7 +115,7 @@
 **Requirements**
 - Python 3.x.x
 - Tested to work with Python version 3.9.7
-- NI-DAQmx or NI-DAQmx Runtime
+- :grey_question: (NI-DAQmx or NI-DAQmx Runtime)
 
 **Installation**
 - Open any terminal program(cmd) and download the repository with `git clone https://version.helsinki.fi/atm-tech/new-dmps-software.git` you might need credentials for that.
