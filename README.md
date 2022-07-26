@@ -1,87 +1,139 @@
 # New DMPS software
-
-General
+**General**
 - Program for DMPS, HalfMini and UFDMPS. 
-- Basic working principle for all setups is similar. Parameters are different and for example HalfMini uses probably different kind of blower. UFDMPS has two DMAs and two CPCs.
+- Basic working principle for all setups is similar. Parameters are different and for example HalfMini uses probably different kind of blower. UFDMPS has two DMAs and two CPCs.<br /><br />
+- :heavy_check_mark: = Feature is done
+- :x: = Feature is not yet implemented
+- :grey_question: = Not sure
 
 **Detectors**
-- TSI CPCs, both old and new serial, pulse and TCP connections
-- TSI electrometer
-- Airmodus A20
-- Airmodus PSM+A20 (for HalfMini)
-- Airmodus new model (A30?)
-- Airmodus UFCPC model coming?
-- Analog electrometers
-- Also detector status should be saved
+- :heavy_check_mark: TSI CPCs old legacy serial and pulse connection
+- :x: TSI CPCs, new serial, pulse and TCP connections
+- :x: TSI electrometer
+- :x: Airmodus A20
+- :x: Airmodus PSM+A20 (for HalfMini)
+- :x: Airmodus new model (A30?)
+- :x: Airmodus UFCPC model coming?
+- :x: Analog electrometers
+- :grey_question: Also detector status should be saved
 
 **DMA's**
-- Vienna different lengths
-- HalfMini
-- TSI nano and long
+- :grey_question: Vienna different lengths
+- :grey_question: HalfMini
+- :grey_question: TSI nano and long
 
 **Blowers**
-- Both analog control and pwm using TSI flow meter
-- HalfMini could use 2 x blower (same type as for DMPS) in future
+- :heavy_check_mark: Both analog control and pwm using TSI flow meter
+- :x: HalfMini could use 2 x blower (same type as for DMPS) in future
 
 **TSI flow meter**
-- Flow, T and P
-- Both 4000 and 5000 serie
+- :heavy_check_mark: Flow, T and P
+- :heavy_check_mark: 4000 series
+- :x: 5000 series
 
 **Analog signals**
-- dP (flow), T, P, RH, HV monitor
-- Possibility to add more analog input channels
+- :heavy_check_mark: dP (flow), T, P, RH, HV monitor
+- :grey_question: Possibility to add more analog input channels
 
-**Stepping voltage and continous voltage scan (DMPS and SMPS)**
+**High Voltage**
+- :heavy_check_mark: Stepping voltage (DMPS)
+- :grey_question: Stepping voltage (SMPS)
+- :x: Continous voltage scan (DMPS and SMPS)
 
 **PID control**
-- Sheath flow? Or using microcontroller?
-- HV control?
-- Parallel script
+- :heavy_check_mark: Sheath flow
+- :x: blower pid using microcontroller?
+- :x: HV control?
+- :heavy_check_mark: Blower pid control is executed in separate thread, could be improved
 
 **Inversion**
-- Python inversion by Anton as module or stand alone old Fortran code from PasiA
-- SMPS inversion? In a separate script but the actual measurement program could give a possibility to determine the delay time. 
+- :x: Python inversion by Anton as module or stand alone old Fortran code from PasiA
+- :x: SMPS inversion? In a separate script but the actual measurement program could give a possibility to determine the delay time. 
 
 **Parameters**
-- *.INI-file
-- Program should give a possibility to create the *INI-file (graphical user interface).
-- Should have also a 'service mode' which allows to change the parameters from GUI. Service mode should show both the raw and the scaled values.
+- :heavy_check_mark: *.INI-file
+- :heavy_check_mark: Program should give a possibility to create the *INI-file (graphical user interface).<br />`The ini file can be edited in the gui and ini file template is part of this repository. New ini file can not be created with the gui`
+- :heavy_check_mark: Should have also a 'service mode' which allows to change the parameters from GUI. Service mode should show the scaled values.
+- :x: Service mode should also show the raw values.
 
 **Graphical user interface**
-- TKINTER
-- Separate result pictures (matplotlib)
+- :heavy_check_mark: Tkinter
+- :x: Draw graphs of the data
 
 **DAQ by NI**
-- NI6211 & 6215
+- :heavy_check_mark: NI6211 & 6215
 
 **Other features**
-- Windows
-- GUI
-- Service mode as described above
+- :heavy_check_mark: Windows supported
+- :heavy_check_mark: GUI
+- :heavy_check_mark: Service mode as described above
 
-**PLAN**
-- Everything should go to Git
-- Pasi's previous scripts are used (these are alredy given to Kasperi)
-- Programmers: Hannu, Pasi, Kasperi,...(Pekka?)
-- Pasi supervises Kasperi with the programming
-- Hannu supervises Kasperi with hardware
+**To Do**
+- :x: Possibility to set calibration coefficients for each measured value (temperature, RH etc)
+- :x: Plotting raw data is implemented to the main script. We'll check the inverted data later.
+- :x: Possibility to switch (and modify) between 4/20 flow modes and size ranges (e.g. 10-820 nm) in the maintenance mode
+- :x: Data is saved according to Actris instructions.
+- :x: Change time function to performance time (Python)
+- :x: SMPS measurement frequency is - at least in the beginning - 10 Hz. Every second scan is ascending and every second descending.
+- :x: What's meaning of 'flow', 'flow_d' and 'flow_c' in Pasi's script? Some correction factor?
 
-**HOW TO START WITH PYTHON**
-- Separate Python environment (how to do?) --> OK (venv)
-- Measurement mode, service mode, configuration mode
+**Feature wishlist**
+- :x: Check updates from Gitlab automatically
 
-**SCHEDULE**
-- Let's start at week 21
-- Short meetings every week 
-- Summer holidays around mid summer and in July. Project should be in a good progress before that.
+**Notes**
+- Week 22: 
+  - Pasi goes through the scripts shortly with Kasperi. Hannu has done a very simple GUI. Kasperi has also started with the user interface.
 
-**Nice to have features**
-- Check updates from Gitlab automatically
+- June 13:
+  - First GUI version is done, TSI flow meter interface ready.
+  - TSI flow meter could have a linear scaling option (offset + span --> 'a*x + b').
+  - Adding NI DAQ to the program, including sensors connected with the NI. So T, RH, P, dP (aerosol flow), HV source (input, output, PID option), CPC pulses (counter), solenoid valves (digital output). Blower will be controlled via a microcontroller (Hannu's board) which is connected to the computer via a serial port. However, blower controlling with NI (including PID) should be an option as all current DMPS work in that way. In addition, building the microcontroller can take a while.
+  - Adding detectors, i.e. CPCs, to the program (serial in this stage).
+  - Board and detailed comments for the scripts (Finnish/English...doesn't matter). Comments can contain also examples how to modify the script.
+  - Pasi is on holiday from Midsummer onwards. 
+  - Next meeting again on next Monday (June 20).  
+
+- June 20:
+  - Pasi gives instructions how to add electrometer (TSI) communication to the script. Otherwise, TSI3750 is enough in this stage.
+  - Aim is to get the DMPS measurement cycle running so that the data is produced correctly. SMPS is done after that. SMPS measurement frequency is - at least in the beginning - 10 Hz. Every second scan is ascending and every second descending. Pasi gives instructions.
+  - Data is saved according to Actris instructions. 
+  - Plotting raw data is implemented to the main script. We'll check the inverted data later.
+  - Let's have a short meeting still on Wednesday 22.
+
+- July 11
+  - Automatic updates (e.g. 1 s) of parameter values in GUI
+  - Possibility to set calibration coefficients for each measured value (temperature, RH etc)
+  - CPC concentration could be visible also in the maintenance window 
+  - Possibility to switch (and modify) between 4/20 flow modes and size ranges (e.g. 10-820 nm) in the maintenance mode
+  - Open questions:
+    - How does time function work in Python? Does it use the performance counter?
+    - Is 'float' double in Python?
+    - What's meaning of 'flow', 'flow_d' and 'flow_c' in Pasi's script? Some correction factor?
+    - Is it possible to read 5 s average value from the CPC directly?
+
+# Instructions
+**Requirements**
+- Python 3.x.x
+- Tested to work with Python version 3.9.7
+- NI-DAQmx or NI-DAQmx Runtime
 
 **Installation**
-- Tested to work with Python version 3.9.7
-- Install required depencies:
-- python -m pip install -r requirements.txt
+- Open any terminal program(cmd) and download the repository with `git clone https://version.helsinki.fi/atm-tech/new-dmps-software.git` you might need credentials for that.
+- Or just download the zip file from the main page
+  - You probably can only download main branch with https link. Use .zip download to download different branch. Still you probably only want to use main branch.
+  - Install the repository to any safe location<br /><br />
+- Create virtual environment with `python -m venv env` inside `new-dmps-software` folder
+  - Virtual environment enables you to have multiple different python and python module version installed on the same PC. The Environment to run this program is now isolated virtual environment.
+  - You can install the venv to any safe location
+- Activate the env with `env\Scripts\activate`
+  - Make sure you are in correct location so the given file path will work(Root folder which contains env folder)
+  - If your terminal displays `(env) [PATH]` everything is working correctly<br /><br />
+- Navigate with `cd` inside `new-dmps-software`(root folder of the program)
+- Install required depencies with `python -m pip install -r requirements.txt`
+  - Pip probably gives warning to upgrade to a new version. You can do that if you want
+  - Installation is now complete
 
-
-
+**How to start the program**
+- Navigate inside `new-dmps-software` folder with any terminal program(cmd)
+- Activate the virtual environment `env\Scripts\activate`
+- Run the main file with `python main.py`
