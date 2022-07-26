@@ -76,4 +76,18 @@ if __name__ == "__main__":  # Means that code is executed only if this file is r
     dmps_measure_thread.run_measure = False
     dmps_measure_thread.join()  # Wait for thread to terminate
 
+    # Ensure that all tasks are closed
+    daq.counter_task.close()
+    daq.pulse_task.close()
+    daq.ai_task.close()
+    daq.ao_task.close()
+    daq.conc_valve_task.close()
+    daq.bypass_valve_task.close()
+    daq.pulse_task.close()
+    daq.counter_task.close()
+
+    # Ensure that all serial connections are closed
+    cpc_3750.ser_connection.close()
+    flow_meter_4000.ser_connection.close()
+
     logging.info("Closed the GUI")
