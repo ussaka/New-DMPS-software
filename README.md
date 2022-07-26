@@ -80,7 +80,7 @@
 **Feature wishlist**
 - :x: Check updates from Gitlab automatically
 
-**Notes**
+**Meeting notes**
 - Week 22: 
   - Pasi goes through the scripts shortly with Kasperi. Hannu has done a very simple GUI. Kasperi has also started with the user interface.
 
