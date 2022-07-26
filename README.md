@@ -4,7 +4,7 @@
 - Basic working principle for all setups is similar. Parameters are different and for example HalfMini uses probably different kind of blower. UFDMPS has two DMAs and two CPCs.<br /><br />
 - :heavy_check_mark: = Feature is done
 - :x: = Feature is not yet implemented
-- :grey_question: = Not sure
+- :grey_question: = Not sure if the feature is needed or is implemented
 
 **Detectors**
 - :heavy_check_mark: TSI CPCs old legacy serial and pulse connection
