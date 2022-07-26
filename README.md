@@ -119,14 +119,14 @@
 
 **Installation**
 - Open any terminal program(cmd) and download the repository with `git clone https://version.helsinki.fi/atm-tech/new-dmps-software.git` you might need credentials for that.
-- Or just download the zip file from the main page
-  - You probably can only download main branch with https link. Use .zip download to download different branch. Still you probably only want to use main branch.
+  - Or just download the zip file from the main page
   - Install the repository to any safe location<br /><br />
 - Create virtual environment with `python -m venv env` inside `new-dmps-software` folder
-  - Virtual environment enables you to have multiple different python and python module version installed on the same PC. The Environment to run this program is now isolated virtual environment.
-  - You can install the venv to any safe location
+  - Virtual environment enables you to have multiple different python and python module versions installed on the same PC. The Environment to run this program is now isolated virtual environment.
+  - Usage of virtual environment is optional
 - Activate the env with `env\Scripts\activate`
   - Make sure you are in correct location so the given file path will work(Root folder which contains env folder)
+  - PowerShell might give you trouble
   - If your terminal displays `(env) [PATH]` everything is working correctly<br /><br />
 - Navigate with `cd` inside `new-dmps-software`(root folder of the program)
 - Install required depencies with `python -m pip install -r requirements.txt`
