@@ -86,7 +86,7 @@ class AutomaticMeasurementThread(Thread):
         mean_free_path_0 = 67.3e-9  # Unit is m
         gas_pressure_0 = 101325.0
         gas_pressure = gas_pressure * 1000.0  # kPa to Pa
-        gas_temp = gas_temp + 273.15 # °C to K
+        gas_temp = gas_temp + 273.15  # °C to K
 
         particle_mean_free_path = mean_free_path_0 * ((gas_temp/self.gas_temp_0)**2.0) * (
             gas_pressure_0/gas_pressure) * ((self.gas_temp_0+110.4) / (gas_temp+110.4))
@@ -217,7 +217,10 @@ class AutomaticMeasurementThread(Thread):
                     "Europe/Helsinki", "%Y-%m-%d %H:%M:%S %Z%z")
                 file_time_utc, file_time_local = self.get_time(
                     "Europe/Helsinki", "%Y%m%d")
-                file_name = f"dmps_a408_{file_time_utc}.scan"
+                file_name = f"dmps_4_{file_time_utc}.scan"
+
+                # Create data file
+                file = open(file_name, "a")
 
                 # Read flow, temp and pressure from the queue
                 # The queue is updated by blower pid thread
@@ -239,8 +242,26 @@ class AutomaticMeasurementThread(Thread):
                     particle_mobility_list, dma_sheath_flow)
 
                 # Print headers for the data # TODO: Replace with write to file
-                print(
-                    f"i{' '*2}p_d{' '*3}hvo{' '*5}hvi{' '*3}conc_d{' '*2}conc_s{' '*3}conc{' '*3}f{' '*4}t{' '*7}p")
+                file.write(
+                    f"Flow meter temp Flow meter pressure    Daq flow    Flow meter flow    Particle size\n")
+
+                # Get daq flow
+                self.daq.measure_ai()
+                daq_flow = self.daq.scale_value("f")
+
+                # Write to the file
+                if loop_index == 0:
+                    file.write(
+                        f"{flow_meter_temp + 273.15:.3f} {flow_meter_pressure:.3f}   {daq_flow}  {flow_meter_flow:.3f}   ")
+                    for p_size in self.small_particle_diameters:
+                        file.write(f"{p_size * 1e9}   ")
+                    file.write("\n")
+                elif loop_index == 1:
+                    file.write(
+                        f"{flow_meter_temp + 273.15:.3f} {flow_meter_pressure:.3f}   {daq_flow}  {flow_meter_flow:.3f}   ")
+                    for p_size in self.large_particle_diameters:
+                        file.write(f"{p_size * 1e9}   ")
+                    file.write("\n")
 
                 particle_list_index = 0  # Used to id particle size
                 # Record start time
@@ -285,15 +306,15 @@ class AutomaticMeasurementThread(Thread):
                         self.detector.flow / time_pulses_counted
                     cpc_conc_d = conc_d / self.detector.flow_d
 
-                    # TODO: Remove
-                    out_line = f"{particle_list_index+1}  {p_d_list[particle_list_index]*1e9:.2f}  {voltage:.2f}  {hvi:.2f}  {cpc_conc_d:.2f}  {cpc_conc_s:.2f}  {cpc_conc:.2f}  {flow_meter_flow:.2f}  {flow_meter_temp:.2f}  {flow_meter_pressure:.2f}"
-                    print(out_line)
+                    # Write to the file
+                    file.write(
+                        f"Flow meter temp Flow meter pressure    Daq flow    Flow meter flow    Particle size    HV in HV out    Concentration Concentration_d Concentration_s\n")
+                    file.write(
+                        f"{flow_meter_temp + 273.15:.3f} {flow_meter_pressure:.3f}   {daq_flow}  {flow_meter_flow:.3f}   {hvi} {voltage}    {cpc_conc:.3f}  {cpc_conc_d:.3f}  {cpc_conc_s:.3f}\n")
 
                     particle_list_index = particle_list_index + 1
                     # Set the hv voltage to zero
                     self.daq.set_ao(0.0)
-                # TODO: Remove
-                print()
 
         # Close all serial connections and daq tasks
         self.daq.set_ao(0.0)
