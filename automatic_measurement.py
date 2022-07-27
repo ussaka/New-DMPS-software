@@ -86,6 +86,7 @@ class AutomaticMeasurementThread(Thread):
         mean_free_path_0 = 67.3e-9  # Unit is m
         gas_pressure_0 = 101325.0
         gas_pressure = gas_pressure * 1000.0  # kPa to Pa
+        gas_temp = gas_temp + 273.15 # °C to K
 
         particle_mean_free_path = mean_free_path_0 * ((gas_temp/self.gas_temp_0)**2.0) * (
             gas_pressure_0/gas_pressure) * ((self.gas_temp_0+110.4) / (gas_temp+110.4))
@@ -193,6 +194,7 @@ class AutomaticMeasurementThread(Thread):
 
                 # Total concentration
                 elif loop_index == 2:  # TODO: No need to loop dma voltages
+                    sleep(5.0)
                     self.daq.set_do(self.daq.conc_valve_task,
                                     True)  # Total conc
                     self.daq.set_do(self.daq.bypass_valve_task,
@@ -204,6 +206,7 @@ class AutomaticMeasurementThread(Thread):
                     print(f"Total concentration: {rd}")
                     print()
                     loop_index = 0
+                    sleep(5.0)
                     continue
 
                 # TODO: Change to 5s
