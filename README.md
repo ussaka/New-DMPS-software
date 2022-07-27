@@ -69,13 +69,13 @@
 - :heavy_check_mark: Service mode as described above
 
 **To Do**
-- :x: Possibility to set calibration coefficients for each measured value (temperature, RH etc)
+- :x: Possibility to set calibration coefficients for each measured value (temperature, RH etc). `Can be done by editing the ini file directly`
 - :x: Plotting raw data is implemented to the main script. We'll check the inverted data later.
 - :x: Possibility to switch (and modify) between 4/20 flow modes and size ranges (e.g. 10-820 nm) in the maintenance mode
 - :x: Data is saved according to Actris instructions.
 - :x: Change time function to performance time (Python)
 - :x: SMPS measurement frequency is - at least in the beginning - 10 Hz. Every second scan is ascending and every second descending.
-- :x: What's meaning of 'flow', 'flow_d' and 'flow_c' in Pasi's script? Some correction factor?
+- :x: What's meaning of 'flow', 'flow_d' and 'flow_c' in Pasi's script? Some correction factor? `Values are in the ini file`
 
 **Feature wishlist**
 - :x: Check updates from Gitlab automatically
@@ -136,6 +136,8 @@
 **How to start the program**
 - Navigate inside `new-dmps-software` folder with any terminal program(cmd)
 - Activate the virtual environment `env\Scripts\activate`
+  - PowerShell might give you trouble
+  - If you encounter problems ensure that your PATH is correct
 - Run the main file with `python main.py`
 
 **Bugs/Issues**
