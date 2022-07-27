@@ -4,5 +4,8 @@ __pycache__
 # VS Code settings
 .vscode/
 
-# Logs
+# Log files
 debug/
+
+# Data files
+data/
