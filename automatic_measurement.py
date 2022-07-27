@@ -80,12 +80,13 @@ class AutomaticMeasurementThread(Thread):
 
         return dynamic_gas_visc
 
-    def calc_p_mean_free_path(self, gas_pressure: float, gas_temp: float) -> float: #273.15
+    def calc_p_mean_free_path(self, gas_pressure: float, gas_temp: float) -> float:
         """Returns particle's mean free path at gas_temp_0 and 1013.25 hPa"""
 
         mean_free_path_0 = 67.3e-9  # Unit is m
         gas_pressure_0 = 101325.0
         gas_pressure = gas_pressure * 1000.0  # kPa to Pa
+        gas_temp = gas_temp + 273.15 # °C to K
 
         particle_mean_free_path = mean_free_path_0 * ((gas_temp/self.gas_temp_0)**2.0) * (
             gas_pressure_0/gas_pressure) * ((self.gas_temp_0+110.4) / (gas_temp+110.4))
