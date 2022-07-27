@@ -80,7 +80,7 @@ class AutomaticMeasurementThread(Thread):
 
         return dynamic_gas_visc
 
-    def calc_p_mean_free_path(self, gas_pressure: float, gas_temp: float) -> float:
+    def calc_p_mean_free_path(self, gas_pressure: float, gas_temp: float) -> float: #273.15
         """Returns particle's mean free path at gas_temp_0 and 1013.25 hPa"""
 
         mean_free_path_0 = 67.3e-9  # Unit is m
@@ -193,6 +193,7 @@ class AutomaticMeasurementThread(Thread):
 
                 # Total concentration
                 elif loop_index == 2:  # TODO: No need to loop dma voltages
+                    sleep(5.0)
                     self.daq.set_do(self.daq.conc_valve_task,
                                     True)  # Total conc
                     self.daq.set_do(self.daq.bypass_valve_task,
@@ -204,6 +205,7 @@ class AutomaticMeasurementThread(Thread):
                     print(f"Total concentration: {rd}")
                     print()
                     loop_index = 0
+                    sleep(5.0)
                     continue
 
                 # TODO: Change to 5s
