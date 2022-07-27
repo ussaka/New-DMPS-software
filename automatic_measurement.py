@@ -262,6 +262,8 @@ class AutomaticMeasurementThread(Thread):
                     for p_size in self.large_particle_diameters:
                         file.write(f"{p_size * 1e9}   ")
                     file.write("\n")
+                file.write(
+                    f"Flow meter temp Flow meter pressure    Daq flow    Flow meter flow    Particle size    HV in HV out    Concentration Concentration_d Concentration_s\n")
 
                 particle_list_index = 0  # Used to id particle size
                 # Record start time
@@ -307,14 +309,14 @@ class AutomaticMeasurementThread(Thread):
                     cpc_conc_d = conc_d / self.detector.flow_d
 
                     # Write to the file
-                    file.write(
-                        f"Flow meter temp Flow meter pressure    Daq flow    Flow meter flow    Particle size    HV in HV out    Concentration Concentration_d Concentration_s\n")
+
                     file.write(
                         f"{flow_meter_temp + 273.15:.3f} {flow_meter_pressure:.3f}   {daq_flow}  {flow_meter_flow:.3f}   {hvi} {voltage}    {cpc_conc:.3f}  {cpc_conc_d:.3f}  {cpc_conc_s:.3f}\n")
 
                     particle_list_index = particle_list_index + 1
-                    # Set the hv voltage to zero
-                    self.daq.set_ao(0.0)
+                # Set the hv voltage to zero
+                self.daq.set_ao(0.0)
+                file.close()
 
         # Close all serial connections and daq tasks
         self.daq.set_ao(0.0)
