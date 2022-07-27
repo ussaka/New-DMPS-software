@@ -137,3 +137,7 @@
 - Navigate inside `new-dmps-software` folder with any terminal program(cmd)
 - Activate the virtual environment `env\Scripts\activate`
 - Run the main file with `python main.py`
+
+**Bugs/Issues**
+- Known small priority bugs are documented in Gitlab's Issues section
+- If you encounter a bug you can document it in the Issues section. It would be helpful if you attach debug.log from debug folder (and screenshot of terminal output) to the report
