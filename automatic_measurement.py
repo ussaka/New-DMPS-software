@@ -220,7 +220,7 @@ class AutomaticMeasurementThread(Thread):
                 file_name = f"dmps_4_{file_time_utc}.scan"
 
                 # Create data file
-                file = open(file_name, "a")
+                file = open(f"data/{file_name}", "a")
 
                 # Read flow, temp and pressure from the queue
                 # The queue is updated by blower pid thread
