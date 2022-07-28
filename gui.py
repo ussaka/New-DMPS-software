@@ -658,6 +658,7 @@ class MeasurementTab(ttk.Frame):
 
         ax.plot(x, y)
         canvas.draw()
+        canvas.get_tk_widget().grid(padx=10, pady=10)
 
         # Call this method every 5s
         # after_id is used to stop calling this method

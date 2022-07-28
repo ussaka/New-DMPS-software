@@ -260,7 +260,7 @@ class AutomaticMeasurementThread(Thread):
                         file.write(f"{p_size * 1e9:.3f} ")
                     file.write("\n")
                 elif loop_index == 2:
-                    file.write(f"Total concentration: {rd:.3f}")
+                    file.write(f"Total concentration: {rd:.3f}\n")
 
                 # Record start time
                 start_time = time()  # TODO: More precise counter?, use this for something?
