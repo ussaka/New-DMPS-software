@@ -4,12 +4,12 @@
 
 # Reason for doing imports this way is that several classes are defined in both modules
 # E.g. tk.Button() vs tkk.Button()
-from doctest import master
 import tkinter as tk
 from tkinter import ttk, messagebox
 
 import logging
 
+from matplotlib import markers
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.figure import Figure
@@ -633,16 +633,17 @@ class MeasurementTab(ttk.Frame):
 
         canvas = FigureCanvasTkAgg(plot_fig, master=self)  # A tk.DrawingArea.
         canvas.draw()
+        points = []
 
         canvas.get_tk_widget().grid(padx=10, pady=10)
 
         # Measure button
         measurement_btn = ttk.Button(
-            self, text="Start", command=lambda: self.automatic_measurement_start(automatic_measurement_thread, measurement_btn, ax, voltage_queue, conc_queue, canvas))
+            self, text="Start", command=lambda: self.automatic_measurement_start(automatic_measurement_thread, measurement_btn, ax, voltage_queue, conc_queue, canvas, points))
         measurement_btn.grid(row=0, column=0, sticky="w", padx=5, pady=5)
 
     # TODO: Typehints
-    def automatic_measurement_start(self, automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas) -> None:
+    def automatic_measurement_start(self, automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, points) -> None:
         """Start automatic measurement thread"""
 
         # Start the thread
@@ -650,27 +651,27 @@ class MeasurementTab(ttk.Frame):
 
         # Plot
         if voltage_queue.empty() or conc_queue.empty():
-            x = 0
-            y = 0
+            pass
         else:
             x = voltage_queue.get()
             y = conc_queue.get()
+            points.append((x, y))
+            ax.plot(points)
 
-        ax.plot(x, y)
         canvas.draw()
         canvas.get_tk_widget().grid(padx=10, pady=10)
 
         # Call this method every 5s
         # after_id is used to stop calling this method
         plot_after_id = self.after(
-            5000, lambda: self.automatic_measurement_start(automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas))
+            5000, lambda: self.automatic_measurement_start(automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, points))
 
         # Configure button to stop the measurement if it is clicked again
         measure_btn.configure(text="Stop", command=lambda: self.automatic_measurement_stop(
-            automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, plot_after_id))
+            automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, plot_after_id, points))
 
     # TODO: Typehints
-    def automatic_measurement_stop(self, automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, plot_after_id) -> None:
+    def automatic_measurement_stop(self, automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, plot_after_id, points) -> None:
         """Stop automatic measurement thread"""
 
         # Stop the thread after current measurement loop is complete
@@ -678,7 +679,7 @@ class MeasurementTab(ttk.Frame):
 
         # Configure button to stop the measurement if it is clicked again
         measure_btn.configure(text="Start", command=lambda: self.automatic_measurement_start(
-            automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas))
+            automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, points))
 
         # End the call loop
         self.after_cancel(plot_after_id)
