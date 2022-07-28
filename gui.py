@@ -4,10 +4,16 @@
 
 # Reason for doing imports this way is that several classes are defined in both modules
 # E.g. tk.Button() vs tkk.Button()
+from doctest import master
 import tkinter as tk
 from tkinter import ttk, messagebox
 
 import logging
+
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg, NavigationToolbar2Tk)
+from matplotlib.figure import Figure
+import numpy as np
 
 
 class MainWindow(tk.Tk):
@@ -622,6 +628,25 @@ class MeasurementTab(ttk.Frame):
         measurement_btn = ttk.Button(
             self, text="Start", command=lambda: self.automatic_measurement_start(automatic_measurement_thread, measurement_btn))
         measurement_btn.grid(row=0, column=0, sticky="w", padx=5, pady=5)
+
+        # Plot
+        plot_fig = Figure(figsize=(5, 5), dpi=100)
+        t = np.arange(0, 3, .01)
+        ax = fix.add_subplot()
+        line = ax.plot(2, 2 * np.sin(2 * np.py * t))
+        ax.set_xlabel("time s")
+        ax.set_ylabel("f")
+
+        canvas =FigureCanvasTkAgg(plot_fig, master=container)
+        canvas.draw()
+
+        # pack_toolbar=False will make it easier to use a layout manager later on.
+        toolbar = NavigationToolbar2Tk(canvas, container, pack_toolbar=False)
+        toolbar.update()
+
+
+
+
 
     # TODO: Typehints
     def automatic_measurement_start(self, automatic_measurement_thread, measure_btn) -> None:
