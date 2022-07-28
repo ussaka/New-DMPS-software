@@ -649,6 +649,10 @@ class MeasurementTab(ttk.Frame):
         # Start the thread
         automatic_measurement_thread.run_measure = True
 
+        if automatic_measurement_thread.reset_plot:
+            points.clear()
+            automatic_measurement_thread.reset_plot = False
+
         # Plot
         if voltage_queue.empty() or conc_queue.empty():
             pass

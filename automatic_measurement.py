@@ -27,6 +27,7 @@ class AutomaticMeasurementThread(Thread):
         self.queue = flow_meter_queue
         self.v_queue = voltage_queue
         self.conc_queue = conc_queue
+        self.reset_plot = False # Used in plotting the data
 
         self.run_measure = None  # Used to stop the run(measurement) loop
         self.gas_temp_0 = 293.0  # Unit is K, used in calc_x methods
@@ -324,6 +325,7 @@ class AutomaticMeasurementThread(Thread):
                 self.daq.set_ao(0.0)
                 file.write("\n")
                 file.close()
+                self.reset_plot = True
 
         # Close all serial connections and daq tasks
         self.daq.set_ao(0.0)
