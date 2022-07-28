@@ -630,23 +630,17 @@ class MeasurementTab(ttk.Frame):
         measurement_btn.grid(row=0, column=0, sticky="w", padx=5, pady=5)
 
         # Plot
-        plot_fig = Figure(figsize=(5, 5), dpi=100)
+        fig = Figure(figsize=(5, 4), dpi=100)
         t = np.arange(0, 3, .01)
-        ax = fix.add_subplot()
-        line = ax.plot(2, 2 * np.sin(2 * np.py * t))
-        ax.set_xlabel("time s")
-        ax.set_ylabel("f")
+        ax = fig.add_subplot()
+        line, = ax.plot(t, 2 * np.sin(2 * np.pi * t))
+        ax.set_xlabel("time [s]")
+        ax.set_ylabel("f(t)")
 
-        canvas =FigureCanvasTkAgg(plot_fig, master=container)
+        canvas = FigureCanvasTkAgg(fig, master=self)  # A tk.DrawingArea.
         canvas.draw()
 
-        # pack_toolbar=False will make it easier to use a layout manager later on.
-        toolbar = NavigationToolbar2Tk(canvas, container, pack_toolbar=False)
-        toolbar.update()
-
-
-
-
+        canvas.get_tk_widget().grid()
 
     # TODO: Typehints
     def automatic_measurement_start(self, automatic_measurement_thread, measure_btn) -> None:
