@@ -199,20 +199,16 @@ class AutomaticMeasurementThread(Thread):
                 # Total concentration
                 # TODO: Add other cpc measurements
                 elif loop_index == 2:  # TODO: No need to loop dma voltages
-                    sleep(5.0)
+                    sleep(between_voltages_wait)
                     self.daq.set_do(self.daq.conc_valve_task,
                                     True)  # Total conc
                     self.daq.set_do(self.daq.bypass_valve_task,
                                     True)  # Low flow, does not really matter(?)
+                    sleep(cycle_wait_time)
 
                     rd = self.detector.read_rd()  # Get average total concentration (1s)
                     # TODO: Add all three methods of measuring concentration
-                    print()
-                    print(f"Total concentration: {rd}")
-                    print()
                     loop_index = 0
-                    sleep(5.0)
-                    continue
 
                 # Get current utc and local time
                 time_utc, time_local = self.get_time(
@@ -261,6 +257,8 @@ class AutomaticMeasurementThread(Thread):
                     for p_size in self.large_particle_diameters:
                         file.write(f"{p_size * 1e9:.3f} ")
                     file.write("\n")
+                elif loop_index == 2:
+                    file.write(f"Total concentration: {rd:.3f}")
 
                 # Record start time
                 start_time = time()  # TODO: More precise counter?, use this for something?
