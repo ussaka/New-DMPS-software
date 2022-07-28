@@ -14,7 +14,7 @@ from pytz import timezone
 class AutomaticMeasurementThread(Thread):
     """Thread uses dmps's devices to automatically measure particle concentration on specified particle sizes"""
 
-    def __init__(self, ini_updater: object, daq: object, flow_meter: object, detector: object, blower_pid_thread: Thread, flow_meter_queue: object) -> None:  # TODO: Improve type hints
+    def __init__(self, ini_updater: object, daq: object, flow_meter: object, detector: object, blower_pid_thread: Thread, flow_meter_queue: object, voltage_queue: object, conc_queue: object) -> None:  # TODO: Improve type hints
         Thread.__init__(self)  # Inherit Thread constructor
         self.name = "Automatic measurement thread"  # Change thread's name
 
@@ -25,6 +25,8 @@ class AutomaticMeasurementThread(Thread):
         self.detector = detector
         self.blower_pid_thread = blower_pid_thread
         self.queue = flow_meter_queue
+        self.v_queue = voltage_queue
+        self.conc_queue = conc_queue
 
         self.run_measure = None  # Used to stop the run(measurement) loop
         self.gas_temp_0 = 293.0  # Unit is K, used in calc_x methods
@@ -312,6 +314,11 @@ class AutomaticMeasurementThread(Thread):
                     # Write to the file
                     file.write(
                         f"{hv_in:.3f} {voltage:.3f}    {cpc_conc:.3f} {cpc_conc_d:.3f} {cpc_conc_s:.3f} ")
+
+                    # Send data to queue to be plotted by GUI
+                    self.v_queue.put_nowait(voltage)
+                    # TODO: Plot average conc of the 3 measurement methods?
+                    self.conc_queue.put_nowait(cpc_conc)
 
                 # Set the hv voltage to zero
                 self.daq.set_ao(0.0)

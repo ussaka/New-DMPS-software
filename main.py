@@ -43,6 +43,10 @@ cpc_3750 = detectors.CpcLegacy(config_updater)
 # Th Queue only holds one sample and updates it constantly by consuming(get) it and putting a new one in the queue if no other thread tries to get it
 flow_meter_queue = queue.Queue(maxsize=1)
 
+# These queues are used to get data to gui.py and plot it
+voltage_queue = queue.Queue()
+conc_queue = queue.Queue()
+
 # When lock is acquired any other thread that tries to acquire lock waits until first thread to acquire it releases it
 # Used for E.g. prevent trying to read flow meters ftp value and changing it's serial settings at the same time
 lock = Lock()
@@ -53,11 +57,11 @@ blower_thread = blower_pid.BlowerPidThread(
 
 # Create dmps automatic measurement thread
 dmps_measure_thread = automatic_measurement.AutomaticMeasurementThread(
-    config_updater, daq, flow_meter_4000, cpc_3750, blower_thread, flow_meter_queue)
+    config_updater, daq, flow_meter_4000, cpc_3750, blower_thread, flow_meter_queue, voltage_queue, conc_queue)
 
 # Create Gui object
 gui = gui.MainWindow(config_updater, daq, flow_meter_4000,
-                     cpc_3750, blower_thread, dmps_measure_thread, flow_meter_queue, lock)
+                     cpc_3750, blower_thread, dmps_measure_thread, flow_meter_queue, voltage_queue, conc_queue, lock)
 
 
 # This executes the program

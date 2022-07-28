@@ -20,7 +20,7 @@ class MainWindow(tk.Tk):
     """Creates main program window"""
 
     # TODO: Improve type hints
-    def __init__(self, ini_updater: object, daq: object, flow_meter: object, detector: object, blower_pid_thread, automatic_measurement_thread, flow_meter_queue: object, lock) -> None:
+    def __init__(self, ini_updater: object, daq: object, flow_meter: object, detector: object, blower_pid_thread, automatic_measurement_thread, flow_meter_queue: object, voltage_queue: object, conc_queue: object, lock) -> None:
         logging.info("Starting to create GUI")
 
         super().__init__()  # Inherit Tk class
@@ -55,7 +55,8 @@ class MainWindow(tk.Tk):
         maintenance_tab = MaintenanceTab(
             self, ini_updater, flow_meter, daq, detector, blower_pid_thread, flow_meter_queue, notebook)
         logging.info("Maintenance tab created")
-        measurement_tab = MeasurementTab(self, automatic_measurement_thread)
+        measurement_tab = MeasurementTab(
+            self, automatic_measurement_thread, voltage_queue, conc_queue)
         logging.info("Measurement tab created")
 
         # Add tabs to the notebook (container)
@@ -621,13 +622,8 @@ class MaintenanceTab(ttk.Frame):
 class MeasurementTab(ttk.Frame):
     """Automatic concentration measurement tab"""
 
-    def __init__(self, container, automatic_measurement_thread) -> None:  # TODO: Improve typehints
+    def __init__(self, container, automatic_measurement_thread, voltage_queue, conc_queue) -> None:  # TODO: Improve typehints
         super().__init__(container)  # Inherit Frame class
-
-        # Measure button
-        measurement_btn = ttk.Button(
-            self, text="Start", command=lambda: self.automatic_measurement_start(automatic_measurement_thread, measurement_btn))
-        measurement_btn.grid(row=0, column=0, sticky="w", padx=5, pady=5)
 
         # Plot
         plot_fig = Figure(figsize=(7, 4), dpi=100)
@@ -635,26 +631,38 @@ class MeasurementTab(ttk.Frame):
         ax.set_xlabel("Voltage [V]")
         ax.set_ylabel("Concentration [1/cm^3]")
 
-        point = ax.plot(1, 2)
+        line = ax.plot(0, 0)
 
         canvas = FigureCanvasTkAgg(plot_fig, master=self)  # A tk.DrawingArea.
         canvas.draw()
 
         canvas.get_tk_widget().grid(padx=10, pady=10)
 
+        # Measure button
+        measurement_btn = ttk.Button(
+            self, text="Start", command=lambda: self.automatic_measurement_start(automatic_measurement_thread, measurement_btn, line, voltage_queue, conc_queue, canvas))
+        measurement_btn.grid(row=0, column=0, sticky="w", padx=5, pady=5)
+
     # TODO: Typehints
-    def automatic_measurement_start(self, automatic_measurement_thread, measure_btn) -> None:
+    def automatic_measurement_start(self, automatic_measurement_thread, measure_btn, line, voltage_queue, conc_queue, canvas) -> None:
         """Start automatic measurement thread"""
 
         # Start the thread
         automatic_measurement_thread.run_measure = True
 
+        # Plot
+        x = voltage_queue.get()
+        y = conc_queue.get()
+        line.set_data(x, y)
+
+        canvas.draw()
+
         # Configure button to stop the measurement if it is clicked again
         measure_btn.configure(text="Stop", command=lambda: self.automatic_measurement_stop(
-            automatic_measurement_thread, measure_btn))
+            automatic_measurement_thread, measure_btn, line, voltage_queue, conc_queue))
 
     # TODO: Typehints
-    def automatic_measurement_stop(self, automatic_measurement_thread, measure_btn) -> None:
+    def automatic_measurement_stop(self, automatic_measurement_thread, measure_btn, line, voltage_queue, conc_queue, canvas) -> None:
         """Stop automatic measurement thread"""
 
         # Stop the thread after current measurement loop is complete
@@ -662,7 +670,7 @@ class MeasurementTab(ttk.Frame):
 
         # Configure button to stop the measurement if it is clicked again
         measure_btn.configure(text="Start", command=lambda: self.automatic_measurement_start(
-            automatic_measurement_thread, measure_btn))
+            automatic_measurement_thread, measure_btn, line, voltage_queue, conc_queue, canvas))
 
 
 # General functions for the classes
