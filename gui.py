@@ -630,7 +630,7 @@ class MeasurementTab(ttk.Frame):
         measurement_btn.grid(row=0, column=0, sticky="w", padx=5, pady=5)
 
         # Plot
-        plot_fig = Figure(figsize=(5, 4), dpi=100)
+        plot_fig = Figure(figsize=(7, 4), dpi=100)
         ax = plot_fig.add_subplot()
         ax.set_xlabel("Voltage [V]")
         ax.set_ylabel("Concentration [1/cm^3]")
@@ -640,7 +640,7 @@ class MeasurementTab(ttk.Frame):
         canvas = FigureCanvasTkAgg(plot_fig, master=self)  # A tk.DrawingArea.
         canvas.draw()
 
-        canvas.get_tk_widget().grid(padx=5, pady=5)
+        canvas.get_tk_widget().grid(padx=10, pady=10)
 
     # TODO: Typehints
     def automatic_measurement_start(self, automatic_measurement_thread, measure_btn) -> None:
