@@ -252,14 +252,14 @@ class AutomaticMeasurementThread(Thread):
                     file.write(
                         f"{time_local}    {flow_meter_temp + 273.15:.3f} {flow_meter_pressure:.3f} {daq_flow:.3f} {flow_meter_flow:.3f}    ")
                     for p_size in self.small_particle_diameters:
-                        file.write(f"{p_size * 1e9} ")
+                        file.write(f"{p_size * 1e9:.3f} ")
                     file.write("\n")
 
                 elif loop_index == 1:
                     file.write(
                         f"{time_local}    {flow_meter_temp + 273.15:.3f} {flow_meter_pressure:.3f} {daq_flow:.3f} {flow_meter_flow:.3f}    ")
                     for p_size in self.large_particle_diameters:
-                        file.write(f"{p_size * 1e9} ")
+                        file.write(f"{p_size * 1e9:.3f} ")
                     file.write("\n")
 
                 # Record start time
@@ -313,7 +313,7 @@ class AutomaticMeasurementThread(Thread):
 
                     # Write to the file
                     file.write(
-                        f"{hv_in} {voltage}    {cpc_conc:.3f} {cpc_conc_d:.3f} {cpc_conc_s:.3f} ")
+                        f"{hv_in:.3f} {voltage:.3f}    {cpc_conc:.3f} {cpc_conc_d:.3f} {cpc_conc_s:.3f} ")
 
                 # Set the hv voltage to zero
                 self.daq.set_ao(0.0)
