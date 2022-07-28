@@ -656,7 +656,7 @@ class MeasurementTab(ttk.Frame):
             x = voltage_queue.get()
             y = conc_queue.get()
             points.append((x, y))
-            ax.plot(points)
+            ax.plot(points, marker="o")
 
         canvas.draw()
         canvas.get_tk_widget().grid(padx=10, pady=10)
