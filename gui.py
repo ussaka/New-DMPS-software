@@ -659,12 +659,17 @@ class MeasurementTab(ttk.Frame):
         ax.plot(x, y)
         canvas.draw()
 
+        # Call this method every 5s
+        # after_id is used to stop calling this method
+        plot_after_id = self.after(
+            5000, lambda: self.automatic_measurement_start(automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas))
+
         # Configure button to stop the measurement if it is clicked again
         measure_btn.configure(text="Stop", command=lambda: self.automatic_measurement_stop(
-            automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue))
+            automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, plot_after_id))
 
     # TODO: Typehints
-    def automatic_measurement_stop(self, automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas) -> None:
+    def automatic_measurement_stop(self, automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, plot_after_id) -> None:
         """Stop automatic measurement thread"""
 
         # Stop the thread after current measurement loop is complete
@@ -673,6 +678,9 @@ class MeasurementTab(ttk.Frame):
         # Configure button to stop the measurement if it is clicked again
         measure_btn.configure(text="Start", command=lambda: self.automatic_measurement_start(
             automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas))
+
+        # End the call loop
+        self.after_cancel(plot_after_id)
 
 
 # General functions for the classes
