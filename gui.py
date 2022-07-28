@@ -631,8 +631,6 @@ class MeasurementTab(ttk.Frame):
         ax.set_xlabel("Voltage [V]")
         ax.set_ylabel("Concentration [1/cm^3]")
 
-        line = ax.plot(0, 0)
-
         canvas = FigureCanvasTkAgg(plot_fig, master=self)  # A tk.DrawingArea.
         canvas.draw()
 
@@ -640,11 +638,11 @@ class MeasurementTab(ttk.Frame):
 
         # Measure button
         measurement_btn = ttk.Button(
-            self, text="Start", command=lambda: self.automatic_measurement_start(automatic_measurement_thread, measurement_btn, line, voltage_queue, conc_queue, canvas))
+            self, text="Start", command=lambda: self.automatic_measurement_start(automatic_measurement_thread, measurement_btn, ax, voltage_queue, conc_queue, canvas))
         measurement_btn.grid(row=0, column=0, sticky="w", padx=5, pady=5)
 
     # TODO: Typehints
-    def automatic_measurement_start(self, automatic_measurement_thread, measure_btn, line, voltage_queue, conc_queue, canvas) -> None:
+    def automatic_measurement_start(self, automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas) -> None:
         """Start automatic measurement thread"""
 
         # Start the thread
@@ -653,16 +651,16 @@ class MeasurementTab(ttk.Frame):
         # Plot
         x = voltage_queue.get()
         y = conc_queue.get()
-        line.set_data(x, y)
+        ax.plot(x, y)
 
         canvas.draw()
 
         # Configure button to stop the measurement if it is clicked again
         measure_btn.configure(text="Stop", command=lambda: self.automatic_measurement_stop(
-            automatic_measurement_thread, measure_btn, line, voltage_queue, conc_queue))
+            automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue))
 
     # TODO: Typehints
-    def automatic_measurement_stop(self, automatic_measurement_thread, measure_btn, line, voltage_queue, conc_queue, canvas) -> None:
+    def automatic_measurement_stop(self, automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas) -> None:
         """Stop automatic measurement thread"""
 
         # Stop the thread after current measurement loop is complete
@@ -670,7 +668,7 @@ class MeasurementTab(ttk.Frame):
 
         # Configure button to stop the measurement if it is clicked again
         measure_btn.configure(text="Start", command=lambda: self.automatic_measurement_start(
-            automatic_measurement_thread, measure_btn, line, voltage_queue, conc_queue, canvas))
+            automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas))
 
 
 # General functions for the classes
