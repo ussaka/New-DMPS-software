@@ -641,7 +641,7 @@ class MeasurementTab(ttk.Frame):
         # Measure button
         measurement_btn = ttk.Button(
             self, text="Start", command=lambda: self.automatic_measurement_start(automatic_measurement_thread, measurement_btn, ax, voltage_queue, conc_queue, canvas, x_coord, y_coord))
-        measurement_btn.grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        measurement_btn.grid(row=1, column=0, sticky="w", padx=5, pady=5)
 
     # TODO: Typehints
     def automatic_measurement_start(self, automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, x_coord, y_coord) -> None:
