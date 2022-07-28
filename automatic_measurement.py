@@ -145,54 +145,59 @@ class AutomaticMeasurementThread(Thread):
         return utc_str, local_str
 
     def run(self):
-        # TODO: Add solenoid valve control
-        # TODO: Add second diameter list
-        # TODO: Add write to a file
         """When the thread is started measure cpc concentration with various methods until self.stop is set to False"""
 
         logging.info(f"Started the {self.name}")
 
-        pulse_count_time = 5.0  # Unit is seconds
-        loop_index = 0
+        # Wait times
+        pulse_count_time = 5.0  # Time to count cpc's pulses
+        # Waiting time after one measurement cycle -> wait time between solenoid valve state changes (sec)
+        cycle_wait_time = 5.0
+
+        between_voltages_wait = 7.0  # Time waited after voltage change
+
+        loop_index = 0  # Used to determine what parameters should be used for this measurement cycle
 
         # Check every 5s is the self.stop set to True, False or None
         # If it is True run the measurement loop
-        # Else if it's False let to thread to end
+        # Else if it's False end the thread
         while self.run_measure != False:
-            sleep(5.0)
+            sleep(cycle_wait_time)  # Waiting time after one measurement cycle
             while self.run_measure == True:
                 # Set the solenoid valve's state for this cycle
-                #   TODO: Get line strings from the ini file
 
-                # Small particles loop
+                # Small particles
                 if loop_index == 0:
                     self.daq.set_do(self.daq.conc_valve_task,
-                                    False)  # Dma conc
+                                    False)  # Dma concentration
                     self.daq.set_do(self.daq.bypass_valve_task,
                                     False)  # High flow
                     dma_sheath_flow = 20.0  # Used in dma voltage calculations. Unit is L/min
+
                     self.blower_pid_thread.pid.auto_mode = False  # Pause updating pid control
-                    self.blower_pid_thread.pid.setpoint = 20.0
+                    self.blower_pid_thread.pid.setpoint = 20.0  # Set PID target flow
                     self.blower_pid_thread.pid.auto_mode = True  # Continue updating pid control
                     p_d_list = self.small_particle_diameters
+
                     loop_index += 1
 
-                # Large particles loop
+                # Large particles
                 elif loop_index == 1:
                     self.daq.set_do(self.daq.conc_valve_task,
-                                    False)  # Dma conc
+                                    False)  # Dma concentration
                     self.daq.set_do(self.daq.bypass_valve_task,
                                     True)  # Low flow
                     dma_sheath_flow = 5.0  # Used in dma voltage calculations. Unit is L/min
-                    # Update the PID object
+
                     self.blower_pid_thread.pid.auto_mode = False  # Pause updating pid control
-                    self.blower_pid_thread.pid.setpoint = 5.0
-                    sleep(5)
+                    self.blower_pid_thread.pid.setpoint = 5.0  # Set PID target flow
                     self.blower_pid_thread.pid.auto_mode = True  # Continue updating pid control
                     p_d_list = self.large_particle_diameters
+
                     loop_index += 1
 
                 # Total concentration
+                # TODO: Add other cpc measurements
                 elif loop_index == 2:  # TODO: No need to loop dma voltages
                     sleep(5.0)
                     self.daq.set_do(self.daq.conc_valve_task,
@@ -209,17 +214,14 @@ class AutomaticMeasurementThread(Thread):
                     sleep(5.0)
                     continue
 
-                # TODO: Change to 5s
-                sleep(1.0)  # Waiting time between flow switch (sec)
-
-                # Get current time
+                # Get current utc and local time
                 time_utc, time_local = self.get_time(
                     "Europe/Helsinki", "%Y-%m-%d %H:%M:%S %Z%z")
                 file_time_utc, file_time_local = self.get_time(
                     "Europe/Helsinki", "%Y%m%d")
-                file_name = f"dmps_4_{file_time_utc}.scan"
 
-                # Create data file
+                # Create a new data file for each day
+                file_name = f"DMPS-4_{file_time_local}.scan"
                 file = open(f"data/{file_name}", "a")
 
                 # Read flow, temp and pressure from the queue
@@ -241,10 +243,6 @@ class AutomaticMeasurementThread(Thread):
                 dma_voltages_list = self.gen_dma_voltages_list(
                     particle_mobility_list, dma_sheath_flow)
 
-                # Print headers for the data # TODO: Replace with write to file
-                file.write(
-                    f"Flow meter temp Flow meter pressure    Daq flow    Flow meter flow    Particle size\n")
-
                 # Get daq flow
                 self.daq.measure_ai()
                 daq_flow = self.daq.scale_value("f")
@@ -252,27 +250,29 @@ class AutomaticMeasurementThread(Thread):
                 # Write to the file
                 if loop_index == 0:
                     file.write(
-                        f"{flow_meter_temp + 273.15:.3f} {flow_meter_pressure:.3f}   {daq_flow}  {flow_meter_flow:.3f}   ")
+                        f"{time_local}    {flow_meter_temp + 273.15:.3f} {flow_meter_pressure:.3f} {daq_flow:.3f} {flow_meter_flow:.3f}    ")
                     for p_size in self.small_particle_diameters:
-                        file.write(f"{p_size * 1e9}   ")
+                        file.write(f"{p_size * 1e9} ")
                     file.write("\n")
+
                 elif loop_index == 1:
                     file.write(
-                        f"{flow_meter_temp + 273.15:.3f} {flow_meter_pressure:.3f}   {daq_flow}  {flow_meter_flow:.3f}   ")
+                        f"{time_local}    {flow_meter_temp + 273.15:.3f} {flow_meter_pressure:.3f} {daq_flow:.3f} {flow_meter_flow:.3f}    ")
                     for p_size in self.large_particle_diameters:
-                        file.write(f"{p_size * 1e9}   ")
+                        file.write(f"{p_size * 1e9} ")
                     file.write("\n")
-                file.write(
-                    f"Flow meter temp Flow meter pressure    Daq flow    Flow meter flow    Particle size    HV in HV out    Concentration Concentration_d Concentration_s\n")
 
-                particle_list_index = 0  # Used to id particle size
                 # Record start time
                 start_time = time()  # TODO: More precise counter?, use this for something?
+
+                file.write(
+                    f"{time_local}    {flow_meter_temp + 273.15:.3f} {flow_meter_pressure:.3f} {daq_flow:.3f} {flow_meter_flow:.3f}    ")
 
                 # Loop through voltages
                 for voltage in dma_voltages_list:
                     self.daq.set_ao(voltage)  # Set HV voltage
-                    sleep(0.1)  # It takes some time to reach to set voltage
+                    # Wait time between voltage changes
+                    sleep(between_voltages_wait)
 
                     # Read flow, temp and pressure from the queue
                     # The queue is updated by blower pid thread
@@ -282,7 +282,8 @@ class AutomaticMeasurementThread(Thread):
                     conc_d = self.detector.read_d()  # Reset cpc's counter
                     self.daq.counter_task.stop()  # Reset daq's counter
                     self.daq.counter_task.start()
-                    pulse_count_start_time = time()  # TODO: More precise counter?
+                    # TODO: More precise counter?
+                    pulse_count_start_time = time()  # Record zero point for pulse count time
 
                     # Count the cpc's pulses for some time
                     sleep(pulse_count_time)
@@ -292,30 +293,31 @@ class AutomaticMeasurementThread(Thread):
                     # Read Cpc's counts measured by the daq
                     daq_counts = self.daq.counter_task.read()
 
-                    # Record how long pulses were counted by the daq
+                    # Calculate how long pulses were counted by the daq
                     time_pulses_counted = time() - pulse_count_start_time  # TODO: More precise counter?
 
-                    # Get HV in voltage
+                    # Read analog input HV voltage from daq
                     self.daq.measure_ai()
                     self.ini_updater.read("config.ini")
-                    hvi = float(
+                    hv_in = float(
                         self.ini_updater["NI_DAQ:Sensors"]["hvi_voltage"].value)
 
-                    rd = self.detector.read_rd()  # Get average total concentration (1s)
                     # Calculate concentration in different ways
-                    cpc_conc_s = rd / self.detector.flow_c
                     cpc_conc = float(daq_counts) / \
                         self.detector.flow / time_pulses_counted
+
+                    rd = self.detector.read_rd()  # Get average total concentration (1s)
+                    cpc_conc_s = rd / self.detector.flow_c
+
                     cpc_conc_d = conc_d / self.detector.flow_d
 
                     # Write to the file
-
                     file.write(
-                        f"{flow_meter_temp + 273.15:.3f} {flow_meter_pressure:.3f}   {daq_flow}  {flow_meter_flow:.3f}   {hvi} {voltage}    {cpc_conc:.3f}  {cpc_conc_d:.3f}  {cpc_conc_s:.3f}\n")
+                        f"{hv_in} {voltage}    {cpc_conc:.3f} {cpc_conc_d:.3f} {cpc_conc_s:.3f} ")
 
-                    particle_list_index = particle_list_index + 1
                 # Set the hv voltage to zero
                 self.daq.set_ao(0.0)
+                file.write("\n")
                 file.close()
 
         # Close all serial connections and daq tasks
