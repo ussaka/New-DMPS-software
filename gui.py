@@ -649,10 +649,14 @@ class MeasurementTab(ttk.Frame):
         automatic_measurement_thread.run_measure = True
 
         # Plot
-        x = voltage_queue.get()
-        y = conc_queue.get()
-        ax.plot(x, y)
+        if voltage_queue.empty() or conc_queue.empty():
+            x = 0
+            y = 0
+        else:
+            x = voltage_queue.get()
+            y = conc_queue.get()
 
+        ax.plot(x, y)
         canvas.draw()
 
         # Configure button to stop the measurement if it is clicked again
