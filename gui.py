@@ -633,49 +633,52 @@ class MeasurementTab(ttk.Frame):
 
         canvas = FigureCanvasTkAgg(plot_fig, master=self)  # A tk.DrawingArea.
         canvas.draw()
-        points = []
+        x_coord = []
+        y_coord = []
 
         canvas.get_tk_widget().grid(padx=10, pady=10)
 
         # Measure button
         measurement_btn = ttk.Button(
-            self, text="Start", command=lambda: self.automatic_measurement_start(automatic_measurement_thread, measurement_btn, ax, voltage_queue, conc_queue, canvas, points))
+            self, text="Start", command=lambda: self.automatic_measurement_start(automatic_measurement_thread, measurement_btn, ax, voltage_queue, conc_queue, canvas, x_coord, y_coord))
         measurement_btn.grid(row=0, column=0, sticky="w", padx=5, pady=5)
 
     # TODO: Typehints
-    def automatic_measurement_start(self, automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, points) -> None:
+    def automatic_measurement_start(self, automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, x_coord, y_coord) -> None:
         """Start automatic measurement thread"""
 
         # Start the thread
         automatic_measurement_thread.run_measure = True
 
         if automatic_measurement_thread.reset_plot:
-            points.clear()
+            x_coord.clear()
+            y_coord.clear
             automatic_measurement_thread.reset_plot = False
-
-        # Plot
-        if voltage_queue.empty() or conc_queue.empty():
-            pass
         else:
-            x = voltage_queue.get()
-            y = conc_queue.get()
-            points.append((x, y))
-            ax.plot(points, marker="o")
+            # Plot
+            if voltage_queue.empty() or conc_queue.empty():
+                pass
+            else:
+                x = voltage_queue.get()
+                y = conc_queue.get()
+                x_coord.append(x)
+                y_coord.append(y)
+                ax.plot(x_coord, y_coord, marker="o")
 
-        canvas.draw()
-        canvas.get_tk_widget().grid(padx=10, pady=10)
+            canvas.draw()
+            canvas.get_tk_widget().grid(padx=10, pady=10)
 
         # Call this method every 5s
         # after_id is used to stop calling this method
         plot_after_id = self.after(
-            5000, lambda: self.automatic_measurement_start(automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, points))
+            5000, lambda: self.automatic_measurement_start(automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, x_coord, y_coord))
 
         # Configure button to stop the measurement if it is clicked again
         measure_btn.configure(text="Stop", command=lambda: self.automatic_measurement_stop(
-            automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, plot_after_id, points))
+            automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, plot_after_id, x_coord, y_coord))
 
     # TODO: Typehints
-    def automatic_measurement_stop(self, automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, plot_after_id, points) -> None:
+    def automatic_measurement_stop(self, automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, plot_after_id, x_coord, y_coord) -> None:
         """Stop automatic measurement thread"""
 
         # Stop the thread after current measurement loop is complete
@@ -683,7 +686,7 @@ class MeasurementTab(ttk.Frame):
 
         # Configure button to stop the measurement if it is clicked again
         measure_btn.configure(text="Start", command=lambda: self.automatic_measurement_start(
-            automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, points))
+            automatic_measurement_thread, measure_btn, ax, voltage_queue, conc_queue, canvas, x_coord, y_coord))
 
         # End the call loop
         self.after_cancel(plot_after_id)
