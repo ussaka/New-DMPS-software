@@ -652,7 +652,8 @@ class MeasurementTab(ttk.Frame):
 
         if automatic_measurement_thread.reset_plot:
             x_coord.clear()
-            y_coord.clear
+            y_coord.clear()
+            ax.cla() # Clear plot
             automatic_measurement_thread.reset_plot = False
         else:
             # Plot
