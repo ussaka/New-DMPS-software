@@ -435,7 +435,7 @@ class MaintenanceTab(ttk.Frame):
 
         # Data labels
         data_labels = ["Flow:", "Temperature:",
-                       "Pressure:", "RH:", "HV in:", "HV out:", "Flow bypass valve:", "Total concentration valve:"]
+                       "Pressure:", "RH:", "HV in:", "HV out:", "Total concentration valve:", "Flow bypass valve:"]
         create_labels(container, data_labels, 0, 0, "w", 1)
 
         # Value labels
@@ -509,14 +509,14 @@ class MaintenanceTab(ttk.Frame):
         # If valve state is True set a button's text accordingly and vice versa
         if valve_str == "conc_valve":  # Total concentration valve
             if state_now:
-                labels[0].config(text="Low flow")
+                labels[0].config(text="Total concentration")
             else:
-                labels[0].config(text="High flow")
+                labels[0].config(text="Dma concentration")
         if valve_str == "bypass_valve":
             if state_now:
-                labels[1].config(text="Total concentration")
+                labels[1].config(text="Low Flow")
             else:
-                labels[1].config(text="Dma concentration")
+                labels[1].config(text="High flow")
 
     def update_daq_labels_start(self, daq_labels: list, daq_measure_btn: ttk.Button) -> None:
         """Reads analog inputs from the daq and updates GUI to display the values"""
