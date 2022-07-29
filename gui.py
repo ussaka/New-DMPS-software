@@ -466,11 +466,11 @@ class MaintenanceTab(ttk.Frame):
         # Solenoid valve buttons
         conc_valve_btn = ttk.Button(
             container, text="On/Off", command=lambda: self.valve_on_off(self.daq.conc_valve_task, solenoid_labels_list, "conc_valve"))
-        conc_valve_btn.grid(row=6, column=3, sticky="w", padx=5, pady=5)
+        conc_valve_btn.grid(row=7, column=3, sticky="w", padx=5, pady=5)
 
         bypass_valve_btn = ttk.Button(
             container, text="On/off", command=lambda: self.valve_on_off(self.daq.bypass_valve_task, solenoid_labels_list, "bypass_valve"))
-        bypass_valve_btn.grid(row=7, column=3, sticky="w", padx=5, pady=5)
+        bypass_valve_btn.grid(row=6, column=3, sticky="w", padx=5, pady=5)
 
         # Measure button
         daq_measure_btn = ttk.Button(
