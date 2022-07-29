@@ -269,6 +269,10 @@ class AutomaticMeasurementThread(Thread):
                 file.write(
                     f"{time_local}    {flow_meter_temp + 273.15:.3f} {flow_meter_pressure:.3f} {daq_flow:.3f} {flow_meter_flow:.3f}    ")
 
+                # Print
+                print("Time    Temp    Pressure    Daq Flow    Flow meter flow    Particle size    HV_in    HV_out\n")
+                list_index = 0 # Used with print
+
                 # Loop through voltages
                 for voltage in dma_voltages_list:
                     self.daq.set_ao(voltage)  # Set HV voltage
@@ -315,11 +319,16 @@ class AutomaticMeasurementThread(Thread):
                     # Write to the file
                     file.write(
                         f"{hv_in:.3f} {voltage:.3f}    {cpc_conc:.3f} {cpc_conc_d:.3f} {cpc_conc_s:.3f} ")
+                    
+                    # Print
+                    print(f"{time_local}    {flow_meter_temp:.3f}    {flow_meter_pressure:.3f}    {daq_flow:.3f}    {flow_meter_flow:.3f}    {p_d_list[list_index]}    {hv_in}    {voltage}")
 
                     # Send data to queue to be plotted by GUI
                     self.v_queue.put_nowait(voltage)
                     # TODO: Plot average conc of the 3 measurement methods?
                     self.conc_queue.put_nowait(cpc_conc)
+
+                    list_index = list_index + 1 # Used with print
 
                 # Set the hv voltage to zero
                 self.daq.set_ao(0.0)
