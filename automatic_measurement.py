@@ -212,6 +212,7 @@ class AutomaticMeasurementThread(Thread):
                     rd = self.detector.read_rd()  # Get average total concentration (1s)
                     # TODO: Add all three methods of measuring concentration
                     loop_index = 0
+                    break
 
                 # Get current utc and local time
                 time_utc, time_local = self.get_time(
