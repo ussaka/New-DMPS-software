@@ -27,7 +27,7 @@ class AutomaticMeasurementThread(Thread):
         self.queue = flow_meter_queue
         self.v_queue = voltage_queue
         self.conc_queue = conc_queue
-        self.reset_plot = False # Used in plotting the data
+        self.reset_plot = False  # Used in plotting the data
 
         self.run_measure = None  # Used to stop the run(measurement) loop
         self.gas_temp_0 = 293.0  # Unit is K, used in calc_x methods
@@ -270,8 +270,9 @@ class AutomaticMeasurementThread(Thread):
                     f"{time_local}    {flow_meter_temp + 273.15:.3f} {flow_meter_pressure:.3f} {daq_flow:.3f} {flow_meter_flow:.3f}    ")
 
                 # Print
-                print("Time    Temp    Pressure    Daq Flow    Flow meter flow    Particle size    HV_in    HV_out\n")
-                list_index = 0 # Used with print
+                print(
+                    "Time                             Temp      P          Daq_f    Tsi_f     P_size   HV_in   HV_out     conc    conc_d    conc_s")
+                list_index = 0  # Used with print
 
                 # Loop through voltages
                 for voltage in dma_voltages_list:
@@ -316,19 +317,24 @@ class AutomaticMeasurementThread(Thread):
 
                     cpc_conc_d = conc_d / self.detector.flow_d
 
+                    # Get current utc and local time
+                    time_utc, time_local_print = self.get_time(
+                        "Europe/Helsinki", "%Y-%m-%d %H:%M:%S %Z%z")
+
                     # Write to the file
                     file.write(
                         f"{hv_in:.3f} {voltage:.3f}    {cpc_conc:.3f} {cpc_conc_d:.3f} {cpc_conc_s:.3f} ")
-                    
+
                     # Print
-                    print(f"{time_local}    {flow_meter_temp:.3f}    {flow_meter_pressure:.3f}    {daq_flow:.3f}    {flow_meter_flow:.3f}    {p_d_list[list_index]}    {hv_in}    {voltage}")
+                    print(
+                        f"{time_local_print}    {flow_meter_temp:.3f}    {flow_meter_pressure:.3f}    {daq_flow:.3f}    {flow_meter_flow:.3f}    {p_d_list[list_index]* 1e9:.3f}    {hv_in:.3f}    {voltage:.3f}    {cpc_conc:.3f}    {cpc_conc_d:.3f}    {cpc_conc_s:.3f}")
 
                     # Send data to queue to be plotted by GUI
                     self.v_queue.put_nowait(voltage)
                     # TODO: Plot average conc of the 3 measurement methods?
                     self.conc_queue.put_nowait(cpc_conc)
 
-                    list_index = list_index + 1 # Used with print
+                    list_index = list_index + 1  # Used with print
 
                 # Set the hv voltage to zero
                 self.daq.set_ao(0.0)
