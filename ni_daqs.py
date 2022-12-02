@@ -1,302 +1,327 @@
-# This file provides functionality for National Instruments data acquisition devices (6211 and 6215)
+"""
+This module provides functionality for National Instruments data acquisition devices (6211 and 6215)
+"""
+
+import logging
 
 import nidaqmx
 from nidaqmx.constants import AcquisitionType
 from nidaqmx.stream_writers import CounterWriter
-import logging
+
+import config
 
 
 class NiDaq:
-    """This class is used for reading and writing data to NI DAQ. It is tested to work with NI6211"""
+    """
+    This class is used for reading and writing data to/from NI DAQ. It is tested to work with NI6211
+    """
 
-    def __init__(self, ini_updater: object) -> None:  # TODO: Improve typehints
-        self.ini_updater = ini_updater  # Used to access the ini file
+    def __init__(self, conf: config.Config) -> None:
+        self.__conf = conf
+        self.__nidaq_conf = self.__conf.get_configuration("NI_DAQ")  # Get configuration dict
+        self.__scaling_conf = self.__conf.get_configuration("NI_DAQ_Scaling")  # Get scaling dict
 
-        self.update_daq_settings()  # Create the instance variables
+        self.__ai_task = self.__create_ai_task()  # Analog input task
+        self.__ao_task = self.__create_ao_task()  # Analog output task
 
-        # Create ai task
-        # ai_min_name must be ai[number] string and ai_max_number must be only a number string
-        self.ai_task = self.create_ai_task(
-            self.ai_min, self.ai_max, -10.0, 10.0)
-        # Create ao task
-        self.ao_task = self.create_ao_task()
+        # Get line numbers and create tasks for the valves
+        # TODO: This could be done with only one task containing virtual tasks(?)
+        conc_line = self.__nidaq_conf.get("conc_line_chan")
+        bypass_line = self.__nidaq_conf.get("bypass_line_chan")
+        self.conc_valve_task = self.__create_do_task(conc_line)  # Task to control total concentration valve
+        self.bypass_valve_task = self.__create_do_task(bypass_line)  # Task to control sample flow bypass valve
 
-        # Create conc line task
-        self.conc_valve_task = self.create_do_task(self.conc_chan)
-        # Create bypass line task
-        self.bypass_valve_task = self.create_do_task(self.bypass_chan)
-
-        # Create counter task
-        self.counter_task = self.create_counter_task()
-        self.counter_task.start()
-
-        # Create pulse task
-        self.pulse_task = self.create_pulse_task()
-        self.pulse_task.start()
-        # Create Object that can tell pulse_task what kind of pulses to generate
-        self.counter_writer = CounterWriter(self.pulse_task.out_stream, True)
+        self.__counter_task = self.__create_counter_task()
+        self.__pulse_task = self.__create_pulse_task()
 
         logging.info("Created NiDaq object")
 
-    def update_daq_settings(self) -> None:
-        """Read ini file and create/update daq instance variables"""
-
-        ini_section = "NI_DAQ"
-
-        # Read settings from the config.ini
-        self.device_id = self.ini_updater[ini_section]["device_id"].value
-        # Min ai channel
-        self.ai_min = self.ini_updater[ini_section]["ai_min"].value
-        # Max ai channel
-        self.ai_max = self.ini_updater[ini_section]["ai_max"].value
-        # High voltage output
-        self.hvo_chan = self.ini_updater[ini_section]["hv_output_chan"].value
-        # Pulse generator channel for the blower
-        self.blower_pulse_chan = self.ini_updater[ini_section]["blower_pulse_chan"].value
-        # Pulse edge counter channel for the Cpc
-        self.cpc_pulse_chan = self.ini_updater[ini_section]["cpc_counter_chan"].value
-        # Input for counter counting cpc pulses
-        self.cpc_signal_chan = self.ini_updater[ini_section]["cpc_signal"].value
-        # Digital I/O channel
-        self.port_chan = self.ini_updater[ini_section]["port_chan"].value
-        # Total concentration valve
-        self.conc_chan = self.ini_updater[ini_section]["conc_line"].value
-        # Bypass valve
-        self.bypass_chan = self.ini_updater[ini_section]["bypass_line"].value
-
-    def update_tasks_settings(self) -> None:
-        """Close existing tasks and recreate them with new settings"""
-
-        # Close the existing tasks
-        self.ai_task.close()
-        self.ao_task.close()
-        self.conc_valve_task.close()
-        self.bypass_valve_task.close()
-        self.counter_task.close()
-        self.pulse_task.close()
-
-        # Recreate tasks with the new settings
-        # Create ai task
-        # ai_min_name must be ai[number] string and ai_max_number must be only a number string
-        self.ai_task = self.create_ai_task(
-            self.ai_min, self.ai_max, -10.0, 10.0)
-        # Create ao task
-        self.ao_task = self.create_ao_task()
-
-        # Create conc line task
-        self.conc_valve_task = self.create_do_task(self.conc_chan)
-        # Create bypass line task
-        self.bypass_valve_task = self.create_do_task(self.bypass_chan)
-
-        # Create counter task
-        self.counter_task = self.create_counter_task()
-        self.counter_task.start()
-
-        # Create pulse task
-        self.pulse_task = self.create_pulse_task()
-        self.pulse_task.start()
-        # Create Object that can tell pulse_task what kind of pulses to generate
-        self.counter_writer = CounterWriter(self.pulse_task.out_stream, True)
-
-    def create_ai_task(self, ai_min_name: str, ai_max_number: str, min_v: float, max_v: float) -> nidaqmx.Task:
+    def __create_ai_task(self) -> nidaqmx.Task:
         """
-        Create ai task to read analog input voltages
+        Create analog input task to read analog input voltages
 
         Remember to close this task after it is not used anymore!
         """
 
-        # Analog input task
+        # Get the variables
+        device_id = self.__nidaq_conf.get("device_id")
+        ai_min = self.__nidaq_conf.get("ai_min")
+        ai_max = self.__nidaq_conf.get("ai_max")
+        min_v = float(self.__nidaq_conf.get("ai_min_v"))
+        max_v = float(self.__nidaq_conf.get("ai_max_v"))
+
         ai_task = nidaqmx.Task(new_task_name="ai_task")  # Create the task
-        ai_str = f"{self.device_id}/{ai_min_name}:{ai_max_number}"
+        ai_str = f"Dev{device_id}/ai{ai_min}:{ai_max}"
+
         try:
             # Set channels that are measured and set min and max voltages that are read
-            ai_task.ai_channels.add_ai_voltage_chan(
-                ai_str, min_val=min_v, max_val=max_v)
+            ai_task.ai_channels.add_ai_voltage_chan(ai_str, min_val=min_v, max_val=max_v)
+            logging.info("Created ai task")
         except nidaqmx.DaqError as e:
             logging.error(e)
-            logging.debug(
-                "Device id or ai channel settings are probably wrong")
+            logging.debug("Can't create ai task. Check device id and ai channel settings from the ini file")
             ai_task.close()
 
-        logging.info("Created ai task")
         return ai_task
 
-    def create_ao_task(self) -> nidaqmx.Task:
+    def __create_ao_task(self) -> nidaqmx.Task:
         """
-        Create ao task to read analog output voltage. Uses self.hvo_chan as channel name
+        Create analog output task to write analog output voltage
 
         Remember to close this task after it is not used anymore!
         """
 
-        # Analog output task
-        ao_task = nidaqmx.Task(new_task_name="ao_task")
-        ao_str = f"{self.device_id}/{self.hvo_chan}"
+        # Get the variables
+        device_id = self.__nidaq_conf.get("device_id")
+        hvo_chan = self.__scaling_conf.get("hvo_chan")
+
+        ao_task = nidaqmx.Task(new_task_name="ao_task")  # Create the task
+        ao_str = f"Dev{device_id}/ao{hvo_chan}"
+
         try:
             ao_task.ao_channels.add_ao_voltage_chan(ao_str)
+            logging.info("Created ao task")
         except nidaqmx.DaqError as e:
             logging.error(e)
-            logging.debug(
-                "Device id or ao channel settings are probably wrong")
+            logging.debug("Can't create ao task. Check device_id and hv_output_chan values from the ini file")
             ao_task.close()
 
-        logging.info("Created ao task")
         return ao_task
 
-    def create_do_task(self, line) -> nidaqmx.Task:
+    def __create_do_task(self, line: str) -> nidaqmx.Task:
         """
-        Create do task to read and write digital out
+        Create do task with given line channel to handle digital output
 
         Remember to close this task after it is not used anymore!
         """
 
-        do_task = nidaqmx.Task(
-            new_task_name=f"do_task_{line}")  # Create the task
-        do_str = f"{self.device_id}/{self.port_chan}/{line}"
+        # Get the variables
+        device_id = self.__nidaq_conf.get("device_id")
+        port_chan = self.__nidaq_conf.get("port_chan")
+
+        do_task = nidaqmx.Task(new_task_name=f"do_task_line_{line}")  # Create the task
+        do_str = f"Dev{device_id}/port{port_chan}/line{line}"
         try:
             do_task.do_channels.add_do_chan(do_str)
+            logging.info(f"Created do_task_line_{line} task")
         except nidaqmx.DaqError as e:
             logging.error(e)
-            logging.debug(
-                "Device id or DO channel settings are probably wrong")
+            logging.debug("Can't create do task. Check do settings from the ini file")
             do_task.close()
 
-        logging.info(f"Created do task with {line}")
         return do_task
 
-    def create_counter_task(self) -> nidaqmx.Task:
+    def __create_counter_task(self) -> nidaqmx.Task:
         """
-        Create counter task to count cpc's pulses
+        Create counter task to count (CPC's) pulses
 
         Remember to close this task after it is not used anymore!
         """
+
+        # Get the variables
+        device_id = self.__nidaq_conf.get("device_id")
+        counter_chan = self.__nidaq_conf.get("cpc_counter_chan")
+        cpc_pulses_chan = self.__nidaq_conf.get("cpc_pulses_chan")
 
         # Create counter task
         counter_task = nidaqmx.Task(new_task_name="counter_task")
-        counter_str = f"{self.device_id}/{self.cpc_pulse_chan}"
+        counter_str = f"Dev{device_id}/ctr{counter_chan}"
         try:
             counter_task.ci_channels.add_ci_count_edges_chan(counter_str)
-
             # Select what (virtual?)channel to count
             # Use this if the default is wrong
-            counter_task.ci_channels[0].ci_count_edges_term = f"/{self.device_id}/{self.cpc_signal_chan}"
+            # TODO: This could be improved
+            counter_task.ci_channels[0].ci_count_edges_term = f"/Dev{device_id}/PFI{cpc_pulses_chan}"
+            logging.info("Created counter task")
 
         except nidaqmx.DaqError as e:
             logging.error(e)
-            logging.debug(
-                "Device id or counter channel settings are probably wrong")
+            logging.debug("Can't create counter task. Check counter settings from the ini file")
             counter_task.close()
 
-        logging.info("Created counter task")
+        try:
+            counter_task.start()
+            logging.info("Started counter task")
+        except nidaqmx.DaqError as e:
+            logging.error(e)
+            logging.debug("Counter task failed to start!")
+
         return counter_task
 
-    def create_pulse_task(self) -> nidaqmx.Task:
+    def __create_pulse_task(self) -> nidaqmx.Task:
         """
         Create task that can generate pulses that control the blower with pid. Return's pulse task object
 
         Remember to close this task after it is not used anymore!
         """
 
+        # Get the variables
+        device_id = self.__nidaq_conf.get("device_id")
+        blower_pulse_chan = self.__nidaq_conf.get("blower_pulse_chan")
+
         # Create the task
         pulse_task = nidaqmx.Task(new_task_name="pulse_task")
-        pulse_str = f"{self.device_id}/{self.blower_pulse_chan}"
+        pulse_str = f"Dev{device_id}/ctr{blower_pulse_chan}"
         try:
             pulse_task.co_channels.add_co_pulse_chan_time(pulse_str)
             # Generate infinite amount of pulses
-            pulse_task.timing.cfg_implicit_timing(
-                sample_mode=AcquisitionType.CONTINUOUS)
+            pulse_task.timing.cfg_implicit_timing(sample_mode=AcquisitionType.CONTINUOUS)
+            logging.info("Created pulse task")
         except nidaqmx.DaqError as e:
             logging.error(e)
-            logging.debug(
-                "Device id or counter channel settings are probably wrong")
+            logging.debug("Device id or counter channel settings are probably wrong")
             pulse_task.close()
 
-        logging.info("Created pulse task")
-        return pulse_task
-
-    def measure_ai(self) -> None:  # TODO: Change to save voltages list to a queue
-        """Reads analog input signals (voltages) from the DAQ"""
-
         try:
-            voltages = self.ai_task.read()  # Get AI voltages
+            pulse_task.start()
+            self.cw_writer = CounterWriter(pulse_task.out_stream, True)
+            logging.info("Started pulse task")
         except nidaqmx.DaqError as e:
             logging.error(e)
-            logging.debug(
-                "Ai task was probably closed too soon")
+            logging.debug("Pulse task failed to start!")
 
-        # Variable sensors contains all keys of the NI_DAQ:Sensors section
-        sensors = self.ini_updater.items("NI_DAQ:Sensors")
+        return pulse_task
 
-        # Update the ini file with the measured voltages
-        # TODO: This loop is ineffective and too complicated(?). E.g. After p_chan is found the loop still continues with p_voltage, p_value_min, etc...
-        # sensor contains (key name, key) tuple
-        for sensor in sensors:
-            # +1 because otherwise range is ai_max - 1
-            for i in range(int(self.ai_max) + 1):
-                # Check if the channel name matches
-                # Use .value to get key's value
-                if sensor[1].value == f"ai{i}":
-                    # Get sensors "name" E.g. rh
-                    splitted_str = sensor[0].split("_")
-                    # Name of the key that data will be saved on
-                    sensor_str = f"{splitted_str[0]}_voltage"
-                    # Voltages are ordered so that voltages[0] is ai0's voltage
-                    voltage = voltages[i]
-                    self.ini_updater["NI_DAQ:Sensors"][sensor_str] = voltage
-                    break  # After value is updated there is no reason to try to find correct channel for this sensor anymore
-
-        self.ini_updater.update_file()  # Save voltages to the config.ini
-        logging.info("Read successfully all the DAQ analog input channels")
-
-    def set_ao(self, voltage: float) -> None:
-        """Writes to the AO. Output value given as parameter in volts"""
-
-        # Update the ini with hv out value
-        self.ini_updater["NI_DAQ:Sensors"]["hvo_voltage"].value = voltage
-        self.ini_updater.update_file()
-
-        # Voltage need to be scaled to ~-10-10V (+-10V = NI DAQ max output(?))
-        voltage = self.scale_value("hvo")
-
-        self.ao_task.write(voltage)  # Set the voltage
-
-        logging.info("Wrote voltage to the analog output channel")
-
-    def set_do(self, do_task: nidaqmx.Task, state: bool) -> bool:  # TODO: Return None?
+    def close_tasks(self) -> None:
         """
-        Set given task to the given state (True/False)
-
-        You can check the line's current status with self.[digital out task].read()
-        Return what was valve's state before calling this method
+        Close all tasks
         """
 
-        do_state_before = do_task.read()  # Read state before the change
-        do_task.write(state)
+        # TODO: Catch warning message if tasks were already closed
+        self.__ai_task.close()
+        self.__ao_task.close()
+        self.bypass_valve_task.close()
+        self.conc_valve_task.close()
+        self.__counter_task.close()
+        self.__pulse_task.close()
+        logging.info("Closed all NIDAQ tasks")
 
-        logging.info(f"Changed {do_task} state to {do_state_before}")
-        return do_state_before
-
-    def scale_value(self, name: str) -> float:
+    def rst_ctr_task(self) -> None:
         """
-        Converts value from an undesired unit(voltage) to a desired unit(E.g. L/min). 
-
-        Parameter must be sensor's "name" from the ini file. E.g. rh.
-
-        Return scaled value
+        Reset counter task counter
         """
 
-        self.ini_updater.read("config.ini")  # Update the ini file
+        try:
+            self.__counter_task.stop()
+        except nidaqmx.DaqError as e:
+            logging.error(e)
+            logging.debug("Counter task failed to stop!")
+        try:
+            self.__counter_task.start()
+        except nidaqmx.DaqError as e:
+            logging.error(e)
+            logging.debug("Counter task failed to stop!")
 
-        # y = m*x + b
-        x = float(self.ini_updater["NI_DAQ:Sensors"][f"{name}_voltage"].value)
-        x1 = float(self.ini_updater["NI_DAQ:Sensors"][f"{name}_v_min"].value)
-        x2 = float(self.ini_updater["NI_DAQ:Sensors"][f"{name}_v_max"].value)
-        y1 = float(self.ini_updater["NI_DAQ:Sensors"]
-                   [f"{name}_value_min"].value)
-        y2 = float(self.ini_updater["NI_DAQ:Sensors"]
-                   [f"{name}_value_max"].value)
-        m = (y1-y2) / (x1-x2)
-        b = (x1*y2 - x2*y1) / (x1-x2)
+        logging.info("Counter task reset successfully")
 
-        scaled_value = m*x + b
+    def read_ctr_task(self) -> float:
+        """
+        Read counter task counter
+
+        Return None if read failed
+        """
+
+        counts = None
+        try:
+            counts = self.__counter_task.read()
+        except nidaqmx.DaqError as e:
+            logging.error(e)
+            logging.debug("Counter task failed to read!")
+
+        logging.info(f"Counter task read: {counts}")
+        return counts
+
+    def measure_ai(self) -> list:
+        """
+        Reads analog input signals (voltages) from the DAQ
+        """
+
+        try:
+            ai_voltages = self.__ai_task.read()  # Voltages are ordered so that voltages[0] is ai0's voltage
+            return ai_voltages
+        except nidaqmx.DaqError as e:
+            logging.error(e)
+            logging.debug("Failed to read analog input voltages")
+
+    def set_ao(self, ao_voltage: float) -> None:
+        """
+        Write to the analog output. Output value given as parameter in volts
+        """
+
+        try:
+            # Voltage needs to be scaled to ~-10-10V (+-10V = NI DAQ max output(?))
+            ao_voltage = self.scale_value("hvo", ao_voltage)
+            self.__ao_task.write(ao_voltage)  # Set the voltage
+            logging.info("Voltage set to the analog output channel")
+        except nidaqmx.DaqError as e:
+            logging.error(e)
+            logging.debug("Failed to write analog output voltage")
+
+    def scale_value(self, name: str, volt: float) -> float:
+        """
+        Converts value from an undesired unit(voltage) to a desired unit(E.g. L/min)
+        Parameter key must be sensor's "name" from the ini file. E.g. rh
+
+        Return the scaled value
+        """
+
+        section = "NI_DAQ:Scaling"
+        try:
+            # y = m*x + b
+            x = volt
+            x1 = float(self.__conf.read(section, f"{name}_v_min"))
+            x2 = float(self.__conf.read(section, f"{name}_v_max"))
+            y1 = float(self.__conf.read(section, f"{name}_value_min"))
+            y2 = float(self.__conf.read(section, f"{name}_value_max"))
+            m = (y1 - y2) / (x1 - x2)
+            b = (x1 * y2 - x2 * y1) / (x1 - x2)
+
+            scaled_value = m * x + b
+
+        except ValueError as e:
+            logging.error(e)
+            logging.debug(f"Failed to scale {name} value")
+            scaled_value = None
 
         return scaled_value
+
+    def set_do(self, do_task: nidaqmx.Task, state: bool) -> None:
+        """
+        TODO: Make static?
+        Set the given digital output task to the given state (True/False)
+        """
+        try:
+            do_task.write(state)
+            logging.info(f"Changed {do_task.name} state to {state}")
+        except nidaqmx.DaqError as e:
+            logging.error(e)
+            logging.debug(f"Failed to write {do_task} state")
+
+    def update_settings(self) -> None:
+        """
+        Update settings conf dicts from the ini file and restart tasks with the new values
+        """
+
+        # Update confs
+        self.__conf.update_configuration(self.__nidaq_conf, "NI_DAQ")
+        self.__conf.update_configuration(self.__scaling_conf, "NI_DAQ:Scaling")
+
+        # Update tasks
+        self.close_tasks()
+        try:
+            self.__ai_task = self.__create_ai_task()  # Analog input task
+            self.__ao_task = self.__create_ao_task()  # Analog output task
+
+            # Get line numbers and create tasks for the valves
+            conc_line = self.__nidaq_conf.get("conc_line_chan")
+            bypass_line = self.__nidaq_conf.get("bypass_line_chan")
+            self.conc_valve_task = self.__create_do_task(conc_line)  # Task to control total concentration valve
+            self.bypass_valve_task = self.__create_do_task(bypass_line)  # Task to control sample flow bypass valve
+
+            self.__counter_task = self.__create_counter_task()
+            self.__pulse_task = self.__create_pulse_task()
+        except nidaqmx.DaqError as e:
+            logging.error(e)
+            logging.debug("Failed to update NIDAQ tasks")
+
+        logging.info("Updated NIDAQ configuration")

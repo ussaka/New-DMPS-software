@@ -15,7 +15,7 @@
 - :x: Airmodus new model (A30?)
 - :x: Airmodus UFCPC model coming?
 - :x: Analog electrometers
-- :grey_question: Also detector status should be saved
+- :x: Also detector status should be saved (concentration and all other data)
 
 **DMA's**
 - :grey_question: Vienna different lengths
@@ -37,13 +37,13 @@
 
 **High Voltage**
 - :heavy_check_mark: Stepping voltage (DMPS)
-- :grey_question: Stepping voltage (SMPS)
+- :x: Stepping voltage (SMPS)
 - :x: Continous voltage scan (DMPS and SMPS)
 
 **PID control**
 - :heavy_check_mark: Sheath flow
-- :x: blower pid using microcontroller?
-- :x: HV control?
+- :x: Blower pid using microcontroller?
+- :x: HV control
 - :heavy_check_mark: Blower pid control is executed in separate thread, could be improved
 
 **Inversion**
@@ -52,33 +52,16 @@
 
 **Parameters**
 - :heavy_check_mark: *.INI-file
-- :heavy_check_mark: Program should give a possibility to create the *INI-file (graphical user interface).<br />`The ini file can be edited in the gui and ini file template is part of this repository. New ini file can not be created with the gui`
+- :heavy_check_mark: Program should give a possibility to create the *INI-file (graphical user interface). -> _The ini file can be edited in the gui and ini file template is part of this repository. New ini file can not be created with the gui._
 - :heavy_check_mark: Should have also a 'service mode' which allows to change the parameters from GUI. Service mode should show the scaled values.
-- :x: Service mode should also show the raw values.
+- :x: Service mode should also show the raw values
 
 **Graphical user interface**
 - :heavy_check_mark: Tkinter
-- :x: Draw graphs of the data
+- :heavy_check_mark: Draw graphs of the data
 
 **DAQ by NI**
 - :heavy_check_mark: NI6211 & 6215
-
-**Other features**
-- :heavy_check_mark: Windows supported
-- :heavy_check_mark: GUI
-- :heavy_check_mark: Service mode as described above
-
-**To Do**
-- :x: Possibility to set calibration coefficients for each measured value (temperature, RH etc). `Can be done by editing the ini file directly`
-- :x: Plotting raw data is implemented to the main script. We'll check the inverted data later.
-- :x: Possibility to switch (and modify) between 4/20 flow modes and size ranges (e.g. 10-820 nm) in the maintenance mode
-- :x: Data is saved according to Actris instructions.
-- :x: Change time function to performance time (Python)
-- :x: SMPS measurement frequency is - at least in the beginning - 10 Hz. Every second scan is ascending and every second descending.
-- :x: What's meaning of 'flow', 'flow_d' and 'flow_c' in Pasi's script? Some correction factor? `Values are in the ini file`
-
-**Feature wishlist**
-- :x: Check updates from Gitlab automatically
 
 **Meeting notes**
 - Week 22: 
@@ -111,14 +94,50 @@
     - What's meaning of 'flow', 'flow_d' and 'flow_c' in Pasi's script? Some correction factor?
     - Is it possible to read 5 s average value from the CPC directly?
 
+- August 23
+  - Data format according to Actris requirements (level 0). Kasperi checks the specifications with Pasi. Not the most urgent thing to do (even though the data format is of course important). Meta data can be saved separately with a separate Python script.  
+  - Pekka asks from Anton (or Teemu) if they could check the script (from the point of the structure). 
+  - Visualization (important aspect): The scan itself (concentration as a function of HV voltage, log-log scale). In addition: measured environmental variables: temperature, flows, RH, pressure. HV-voltages could be visualized (a few lowest values). Axis labels with units. 
+  - Longer delay time (around 2x) for the first measurement so that HV has enough time to stabilize. Delay times should be given as parameters in the *.ini-file. 
+  - Discussion about SMPS-mode. Not an urgent thing to do. Let's discuss after the DMPS-mode is completely ready. 
+  - Testing device is the reference-DMPS (no Python installed yet). Pasi is also using the instrument so Kasperi and Pasi need to agree with the schedule. Kasperi is usually working on Tuesdays. 
+  - Optimizing tool for PID-flow? This would be useful. 
+  - PID-function for HV is added to the script. 
+
+September 27
+- New plot draft done
+- Voltages saved as variables (previously in *.ini-file)
+- Plots: enviromental variables (temperature, pressure, RH, flows), voltages (set point vs. measured, for example ratio between those), concentrations (counter!)
+- Level 0 data: Basically, all measured values should have uncertainties, i.e. all values should be measured several times to get both mean and deviation. Pasi has asked for more details but no reply yet. Program is modified so that values from DAQ are saved 'continuously'. 10 Hz? Would be equal to 50 data points during 5 s measurement period per channel which enough to calculate the statistics. 10 Hz data is not saved, only statistical parameters (probable mean and deviation, maybe percentiles, need to check the operation protocol).
+- Detector (CPC in this case) should be a parameter. Also option for several detectors. 
+- Next meeting: 25.10.
+
+October 25
+- Plots for many environmental parameters ready. Scaling etc. needs still some review. Possibility to zoom or change the scaling?
+-  Basically, the program is almost ready. In addition to the plots, missing items are:
+    * Different detectors (electrometer, other CPCs, e.g. Airmodus A20). TCP communication with TSI CPCs. Pasi can offer the documentation. Saving status of the detectors. 
+    * Data saving format. Level 0 standard overall, uncertainty values. 
+    * SMPS mode but this isn't an urgent issue. 
+- Hannu goes through the program by end of 2022
+- Program is tested with the reference DMPS in November. Pasi can handle the data inversion. Comparison with the SMEAR III DMPS. 
+- Next meeting November 30 at 10:00 o'clock.  
+
+November 30
+- Plots work already quite well. Some fine tuning, such as axis scaling (for pressure) and colors left.
+- Pasi does inversion for the data files. Kasperi adds time to the data file saving script. The program will be running continuously to test it.
+- Time zone selection should be in *.ini-file.
+- Meeting with Kasperi in December 16 at 9:00 almost
+- Dev and main versions in Git
+
+
 # Instructions
 **Requirements**
 - Python 3.x.x
 - Tested to work with Python version 3.9.7
-- :grey_question: (NI-DAQmx or NI-DAQmx Runtime)
+- NI-DAQmx (NI-DAQmx Runtime might be enough?)
 
 **Installation**
-- Open any terminal program(cmd) and download the repository with `git clone https://version.helsinki.fi/atm-tech/new-dmps-software.git` you might need credentials for that.
+- Open any terminal program(cmd) and download the repository with `git clone https://version.helsinki.fi/atm-tech/new-dmps-software.git` you need credentials for that
   - Or just download the zip file from the main page
   - Install the repository to any safe location<br /><br />
 - Create virtual environment with `python -m venv env` inside `new-dmps-software` folder
