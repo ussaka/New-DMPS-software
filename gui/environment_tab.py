@@ -91,7 +91,7 @@ class EnvironmentTab(ttk.Frame):
         t += 0.5
         x_coord.append(t)
 
-        volts = self.__daq_ai_queue.get()
+        volts = self.__daq_ai_queue.get() # ADD: Check whether the queue is empty or not
         self.__daq_lock.acquire()
         y1_coord.append(self.__daq.scale_value("t", volts[int(self.__daq_scaling_conf.get("t_chan"))]))
         y2_coord.append(self.__daq.scale_value("rh", volts[int(self.__daq_scaling_conf.get("rh_chan"))]))
