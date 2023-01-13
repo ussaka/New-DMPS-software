@@ -1,4 +1,6 @@
 # New DMPS software
+
+# Features
 **General**
 - Program for DMPS, HalfMini and UFDMPS. 
 - Basic working principle for all setups is similar. Parameters are different and for example HalfMini uses probably different kind of blower. UFDMPS has two DMAs and two CPCs.<br /><br />
