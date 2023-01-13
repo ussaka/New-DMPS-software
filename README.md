@@ -1,5 +1,8 @@
 # New DMPS software
-GUI to control DMPS measurement device. Summer intern project for the University of Helsinki. Copy of a GitLab repository.
+GUI to control DMPS measurement device. The device has a simple operating principle. It decides what size of particles to let through. Then it uses a separate CPC device to count the particles. This is repeated to all particle sizes to get size distribution.
+
+Summer intern project for the University of Helsinki. Copy of a GitLab repository. Note that this repository is out of date and will not include updates made others than myself.
+
 
 # Features
 **General**
