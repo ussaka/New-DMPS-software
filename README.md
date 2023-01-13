@@ -1,4 +1,5 @@
 # New DMPS software
+GUI to control DMPS measurement device. Summer intern project for the University of Helsinki. Copy of a GitLab repository.
 
 # Features
 **General**
