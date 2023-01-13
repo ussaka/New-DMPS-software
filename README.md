@@ -1,4 +1,9 @@
 # New DMPS software
+| ![Image of old dmps system](https://user-images.githubusercontent.com/72491928/212287999-ef5d7d83-85fe-49f3-a45b-e8f6b098abdc.png) | 
+|:--:| 
+| *Old DMPS system. New DMPS systems that I worked with are far more compact, all components are in one chasis. Check DMPS Photos folder for more pictures* |
+| *Source: https://wiki.helsinki.fi/display/SMEAR/DMPS-system+Instructions* |
+
 GUI to control DMPS measurement device. The device has a simple operating principle. It decides what size of particles to let through. Then it uses a separate CPC device to count the particles. This is repeated to all particle sizes to get size distribution.
 
 Summer intern project for the University of Helsinki. Copy of a GitLab repository. Note that this repository is out of date and will not include updates made others than myself.
